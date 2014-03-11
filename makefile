@@ -18,13 +18,13 @@ srcExt = cpp
 srcDir = src
 objDir = out/obj
 binDir = .
-inc = out/inc
+inc = ./
 
 debug = 1
 
 CFlags = -Wall -Wextra -O2 -std=c++11
 LDFlags =
-libs = GL glfw
+libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi
 libDir =
 
 #************************ DO NOT EDIT BELOW THIS LINE! ************************

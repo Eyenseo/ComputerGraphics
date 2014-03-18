@@ -22,9 +22,9 @@ inc = ./
 
 debug = 1
 
-CFlags = -Wall -Wextra -O2 -std=c++11
-LDFlags =
-libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi
+CFlags = -Wall -Wextra -O2 -std=c++11 
+LDFlags = 
+libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi GLU glut
 libDir =
 
 #************************ DO NOT EDIT BELOW THIS LINE! ************************
@@ -43,6 +43,8 @@ srcDirs := $(shell find . -name '*.$(srcExt)' -exec dirname {} \; | uniq)
 objects := $(patsubst %.$(srcExt),$(objDir)/%.o,$(sources))
 LDFlags += $(libs)
 
+includes_ := $(CFlags) -c -M
+
 ifeq ($(srcExt), cpp)
 	CC = $(CXX)
 	# CC = clang++
@@ -52,10 +54,12 @@ endif
 
 dependencies := $(objects:.o=.d)
 
-.phony: all clean distclean
-
+.phony: all clean distclean include_files
 
 all: distclean $(binDir)/$(app)
+
+include_files: 
+	@$(CC) $(includes_) $(sources)
 
 $(binDir)/$(app): buildrepo $(objects)
 	@echo ""

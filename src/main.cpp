@@ -207,8 +207,38 @@ void InitLighting() {
   glEnable(GL_LIGHT4);
 }
 
-//draw the entire scene
-void Preview() {
+void spheres() {
+  ////First sphere
+  //SetMaterialColor(3, 1, 0, 0);
+  //DrawSphere(Vec3(5, 0, 0), 4);
+  ////Second sphere
+  //SetMaterialColor(3, 0, 1, 0);
+  //DrawSphere(Vec3(-5, 0, 0), 2);
+  ////Third sphere
+  //SetMaterialColor(3, 0, 0, 1);
+  //DrawSphere(Vec3(0, 5, 0), 2);
+}
+
+void triangle() {
+  // Triangle
+  SetMaterialColor(1, 1, 1, 1);
+  SetMaterialColor(2, 0, 0, 1);
+  glBegin(GL_TRIANGLES);
+  glNormal3f(0.0, 0.0, 1.0);
+  glVertex3f(0.0, 2.0, 1.0);
+  glVertex3f(-2.0, -2.0, 1.0);
+  glVertex3f(2.0, -2.0, 1.0);
+  glEnd();
+}
+
+void pyramid() {
+  SetMaterialColor(2, .5, .5, .5);
+  Vec3 pos = Vec3(0, 0, 1.5);
+  // DrawPyramid(pos, 2, 3, -45,-45,45);
+  DrawPyramid(pos, 2, 6);
+}
+
+void preview_init() {
   InitLighting();
   //init viewport to canvassize
   //glViewport(0, 0, window_width_, window_height_);
@@ -228,45 +258,12 @@ void Preview() {
   glRotated(global_x_rotation, 1, 0, 0);
   glRotated(global_y_rotation, 0, 1, 0);
   glRotated(global_z_rotation, 0, 0, 1);
+}
 
-
-  ////First sphere
-  //SetMaterialColor(3, 1, 0, 0);
-  //DrawSphere(Vec3(5, 0, 0), 4);
-  ////Second sphere
-  //SetMaterialColor(3, 0, 1, 0);
-  //DrawSphere(Vec3(-5, 0, 0), 2);
-  ////Third sphere
-  //SetMaterialColor(3, 0, 0, 1);
-  //DrawSphere(Vec3(0, 5, 0), 2);
-
-  // Triangle
-  SetMaterialColor(1, 1, 1, 1);
-  SetMaterialColor(2, 0, 0, 1);
-  glBegin(GL_TRIANGLES);
-  glNormal3f(0.0, 0.0, 1.0);
-  glVertex3f(0.0, 2.0, 1.0);
-  glVertex3f(-2.0, -2.0, 1.0);
-  glVertex3f(2.0, -2.0, 1.0);
-  glEnd();
-
-  // SetMaterialColor(0, .50, .5, 0.5);
-  // DrawSphere(Vec3(0, 0, 0), 1);
-
-  //Red lamp
-  //SetMaterialColor(2, .5,.5,.5);
-  //DrawSphere(Vec3(0, 4, 0), 1);
-  //Green lamp
-  //SetMaterialColor(2, .5,.5,.5);
-  //DrawSphere(Vec3(-3, -3, 0), 1);
-  //Blue lamp
-  //SetMaterialColor(2, 0.5, 0.5, .5);
-  //DrawSphere(Vec3(3, -3, 0), 1);
-
-  SetMaterialColor(2, .5, .5, .5);
-  Vec3 pos = Vec3(0, 0, 1.5);
-  // DrawPyramid(pos, 2, 3, -45,-45,45);
-  DrawPyramid(pos, 2, 6);
+//draw the entire scene
+void Preview() {
+  preview_init();
+  pyramid();
 }
 
 void mouse_scroll_callback(GLFWwindow* window, double x_offset,

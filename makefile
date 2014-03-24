@@ -1,43 +1,32 @@
-# SOURCES = src/main.cpp
-# MAKE = g++ -g -o ./main $(SOURCES) -lGL -lglfw
-
-# all:
-# 	$(MAKE) -O2
-# debug:
-# 	$(MAKE) -O0
-# clean:
-# 	rm -f ./main && all
-
-######################################################################################################
-
 # taken from http://ubuntuforums.org/showthread.php?t=1204739
-
 app = main
 
 srcExt = cpp
 srcDir = src
 objDir = out/obj
 binDir = .
-inc = ./
+inc = .
 
 debug = 1
 
-CFlags = -Wall -Wextra -O2 -std=c++11 
-LDFlags = 
-libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi GLU glut
+CFlags = -Wall -Wextra -std=gnu++11
+LDFlags =
+libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi
 libDir =
 
 #************************ DO NOT EDIT BELOW THIS LINE! ************************
 
 ifeq ($(debug),1)
-	debug= -g3
+	CFlags += -g3 -O2
+	LDFlags +=
 else
-	debug= -g1
+	CFlags += -g0 -O3 -flto -fno-fat-lto-objects 
+	LDFlags += -flto -O3
 endif
 inc := $(addprefix -I,$(inc))
 libs := $(addprefix -l,$(libs))
 libDir := $(addprefix -L,$(libDir))
-CFlags += -c $(debug) $(inc) $(libDir) $(libs)
+CFlags += -c $(inc) $(libDir) $(libs)
 sources := $(shell find $(srcDir) -name '*.$(srcExt)')
 srcDirs := $(shell find . -name '*.$(srcExt)' -exec dirname {} \; | uniq)
 objects := $(patsubst %.$(srcExt),$(objDir)/%.o,$(sources))
@@ -52,11 +41,17 @@ else
 	CFlags += -std=gnu99
 endif
 
+version_ = $(CC) --version 
+
+
 dependencies := $(objects:.o=.d)
 
 .phony: all clean distclean include_files
 
-all: distclean $(binDir)/$(app)
+all: version distclean $(binDir)/$(app)
+
+version: 
+		@$(version_)
 
 include_files: 
 	@$(CC) $(includes_) $(sources)
@@ -87,19 +82,19 @@ $(objDir)/%.o: %.$(srcExt)
 
 clean:
 	$(RM) -R -v $(objDir)
-	$(RM) -R -v $(binDir)/$(app)
+	$(RM) -v $(binDir)/$(app)
 
 distclean:
-	$(RM) -R $(binDir)/$(app)
+	$(RM) $(binDir)/$(app)
 
 buildrepo:
 	@$(call make-repo)
 
 define make-repo
-   for dir in $(srcDirs); \
-   do \
-	mkdir -p $(objDir)/$$dir; \
-   done
+	for dir in $(srcDirs); \
+	do \
+		mkdir -p $(objDir)/$$dir; \
+	done
 endef
 
 

@@ -1,17 +1,24 @@
 #include "include/drawable.hpp"
 
-Drawable::Drawable() :
-  origin_(0, 0, 0), boundingbox_{0, 0, 0}, color_{1, 0, 1, 1, 0, 1} {}
+#include <iostream>
 
-Drawable::Drawable(double origin_x, double origin_y, double origin_z) :
-  origin_(origin_x, origin_y, origin_z), color_{1, 0, 1, 1, 0, 1} {}
+Drawable::Drawable()
+  : origin_(0, 0, 0),
+  boundingbox_{0, 0, 0},
+  color_{1, 0, 1, 1, 0, 1},
+  scale_(1) {}
+
+Drawable::Drawable(double origin_x, double origin_y, double origin_z)
+  : origin_(origin_x, origin_y, origin_z),
+  color_{1, 0, 1, 1, 0, 1},
+  scale_(1) {}
 
 Drawable::~Drawable() {}
 
 /**
  * The function will set the material color for OpenGL
- * 
- * @param side    1 = front color, 2 = back color, else both 
+ *
+ * @param side    1 = front color, 2 = back color, else both
  * @param outside which color to be used for the chosen side
  */
 void Drawable::SetMaterialColor(int side, bool outside = true) const {
@@ -21,52 +28,87 @@ void Drawable::SetMaterialColor(int side, bool outside = true) const {
   dif[0] = color_[c++];
   dif[1] = color_[c++];
   dif[2] = color_[c];
+
   for(int i = 0; i < 3; i++) {
     amb[i] = .1 * dif[i];
-    spe[i] = .725;
+    spe[i] = .5;
   }
-
   amb[3] = dif[3] = spe[3] = 1.0;
 
   switch(side) {
-    case 1:
-      mat = GL_FRONT;
+    case 1: mat = GL_FRONT;
       break;
-    case 2:
-      mat = GL_BACK;
+    case 2: mat = GL_BACK;
       break;
-    default:
-      mat = GL_FRONT_AND_BACK;
+    default: mat = GL_FRONT_AND_BACK;
   }
 
-  glMaterialfv(mat, GL_AMBIENT, amb);
-  glMaterialfv(mat, GL_DIFFUSE, dif);
+  glMaterialfv(mat, GL_AMBIENT,  amb);
+  glMaterialfv(mat, GL_DIFFUSE,  dif);
   glMaterialfv(mat, GL_SPECULAR, spe);
   glMaterialf(mat, GL_SHININESS, 20);
 }
 
 /**
  * The function will first translate and then rotate the modelview matrix
- * 
+ *
  * @param x_angle    angel to rotate around the x-axis
  * @param y_angle    angle to rotate around the y-axis
  * @param z_angle    angle to rotate around the z-axis
- * @param x_distance distance the origin has to move in x direction before 
+ * @param x_distance distance the origin has to move in x direction before
  *                   rotation
- * @param y_distance distance the origin has to move in y direction before 
+ * @param y_distance distance the origin has to move in y direction before
  *                   rotation
- * @param z_distance distance the origin has to move in z direction before 
+ * @param z_distance distance the origin has to move in z direction before
  *                   rotation
  */
-void Drawable::rotate_from(double x_angle, double y_angle,
-                           double z_angle, double x_distance, double y_distance,
+void Drawable::rotate_from(double x_angle, double y_angle, double z_angle,
+                           double x_distance, double y_distance,
                            double z_distance) const {
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glTranslatef(x_distance, y_distance, z_distance);
-  glRotatef(x_angle, 1, 0.0f, 0.0f);
-  glRotatef(y_angle, 0.0f, 1, 0.0f);
-  glRotatef(z_angle, 0.0f, 0.0f, 1);
+  glRotatef(x_angle, 1,    0.0f, 0.0f);
+  glRotatef(y_angle, 0.0f, 1,    0.0f);
+  glRotatef(z_angle, 0.0f, 0.0f,    1);
+}
+
+/**
+ * The function will return a function that can handle a key event.
+ * The returned function will change the scale of the object
+ * @param  trigger number that represents the key pressed
+ * @param  amount  amount the scale is increased by
+ * @return         function that will increase the scale of the object
+ */
+std::function<void(int, int)>
+Drawable::scale_up_key_callback(const int trigger, const float amount) {
+  std::function<void(int event, int action)> callback
+    = [this, trigger, amount](int event, int action) {
+        if((trigger == event) && (action == 1)) {
+          scale_ += amount;
+        }
+      };
+
+  return callback;
+}
+
+/**
+ * The function will return a function that can handle a key event.
+ * The returned function will change the scale of the object
+ * @param  trigger number that represents the key pressed
+ * @param  amount  amount the scale is decreased by
+ * @return         function that will decrease the scale of the object
+ */
+std::function<void(int, int)>
+Drawable::scale_down_key_callback(const int trigger, const float amount) {
+  std::function<void(int event, int action)> callback
+    = [this, trigger, amount](int event, int action) {
+        if((trigger == event) && (action == 1)) {
+          scale_ -= amount;
+        }
+      };
+
+  return callback;
 }
 
 Vec3 Drawable::get_origin() const {
@@ -146,7 +188,7 @@ void Drawable::set_color(float r, float g, float b, bool outside = true) {
 
   color_[i++] = r;
   color_[i++] = g;
-  color_[i++] = b;
+  color_[i]   = b;
 }
 
 float Drawable::get_color_red(bool outside = true) {

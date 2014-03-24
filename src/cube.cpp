@@ -3,23 +3,20 @@
 Cube::Cube() : Drawable() {}
 
 Cube::Cube(double origin_x, double origin_y, double origin_z, double size
-             = 1) : Drawable(origin_x,
-                             origin_y,
-                             origin_z
-                             ) {
+             = 1)  :
+  Drawable(origin_x, origin_y, origin_z) {
   set_size(size, size, size);
 }
 
 Cube::Cube(double origin_x, double origin_y, double origin_z, double size_x,
-           double size_y, double size_z) : Drawable(origin_x,
-                                                    origin_y,
-                                                    origin_z) {
+           double size_y, double size_z)  :
+  Drawable(origin_x, origin_y, origin_z) {
   set_size(size_x, size_y, size_z);
 }
 
 Cube::~Cube() {}
 
-void Cube::draw() const {
+void Cube::draw() {
   double half_length = .5 * boundingbox_[0];
 
   Vec3 bottom_left  = Vec3(-half_length, -half_length, 0);
@@ -43,47 +40,49 @@ void Cube::draw() const {
   SetMaterialColor(1, true);
   SetMaterialColor(2, false);
 
+  glEnable(GL_RESCALE_NORMAL);
+
   rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_.p[0],
               origin_.p[1], origin_.p[2]);
+  glScalef(scale_, scale_, scale_);
 
-
-  //Bottom
+  // Bottom
   rotate_from(0, 0, 0, 0, 0, -half_length);
   glBegin(GL_QUADS);
   face(top_left, top_right, bottom_right, bottom_left);
   glEnd();
 
-  //Top
+  // Top
   glPopMatrix();
   rotate_from(180, 0, 0, 0, 0, half_length);
   glBegin(GL_QUADS);
   face(top_left, top_right, bottom_right, bottom_left);
   glEnd();
 
-  //Left
+  // Left
   glPopMatrix();
   rotate_from(0, 90, 0, -half_length, 0, 0);
   glBegin(GL_QUADS);
   face(top_left, top_right, bottom_right, bottom_left);
   glEnd();
 
-  //Back
+  // Back
   glPopMatrix();
   rotate_from(90, 0, 0, 0, half_length, 0);
   glBegin(GL_QUADS);
   face(top_left, top_right, bottom_right, bottom_left);
   glEnd();
 
-  //Right
+  // Right
   glPopMatrix();
-  rotate_from(0, 90, 0, half_length, 0, 0);
+  rotate_from(0, 270, 0, half_length, 0, 0);
   glBegin(GL_QUADS);
   face(top_left, top_right, bottom_right, bottom_left);
   glEnd();
 
-  //Top
+  // Top
   glPopMatrix();
-  rotate_from(90, 0, 0, 0, -half_length, 0);
+  rotate_from(90, 180, 0, 0, -half_length, 0);
   glBegin(GL_QUADS);
   face(top_left, top_right, bottom_right, bottom_left);
   glEnd();

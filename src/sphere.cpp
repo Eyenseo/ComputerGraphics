@@ -20,7 +20,7 @@ Sphere::Sphere(double origin_x, double origin_y, double origin_z, double size_x,
 
 Sphere::~Sphere() {}
 
-void Sphere::draw() const {
+void Sphere::draw() {
   Vec3   normal, v1;
   double a1, a1d,
          a2, a2d,
@@ -35,8 +35,11 @@ void Sphere::draw() const {
   SetMaterialColor(1, true);
   SetMaterialColor(2, false);
 
+  glEnable(GL_RESCALE_NORMAL);
+
   rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_.p[0],
               origin_.p[1], origin_.p[2]);
+  glScalef(scale_, scale_, scale_);
 
   glShadeModel(GL_SMOOTH);
   for(i = 0; i < n1; i++) {

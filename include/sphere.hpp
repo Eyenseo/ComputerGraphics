@@ -16,9 +16,8 @@ public:
          double size_y, double size_z);
   ~Sphere();
 
-  virtual void draw() const;
+  virtual void draw();
   virtual void set_size(double radius);
 };
 
-
-#endif //ifndef SPHERE_HPP
+#endif // ifndef SPHERE_HPP

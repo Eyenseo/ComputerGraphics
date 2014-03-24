@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////
-//FILE:        vec3.hpp
+// FILE:        vec3.hpp
 //
-//AUTHOR:      Martin Bertram
+// AUTHOR:      Martin Bertram
 //
-//DESCRIPTION:	a vector class to represent 3-D points and vectors
+// DESCRIPTION:	a vector class to represent 3-D points and vectors
 ////////////////////////////////////////////////////////////////////
 
 #ifndef VEC3_H
@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//constants ///////////////////////////////////////////////////////
+// constants ///////////////////////////////////////////////////////
 
 #define VEC_DIM 3
 #define VEC_INF 1.0e9
@@ -25,8 +25,7 @@
 #define YVec3 Vec3(0.0, 1.0, 0.0)
 #define ZVec3 Vec3(0.0, 0.0, 1.0)
 
-
-//3D points and vectors /////////////////////////////////////////////
+// 3D points and vectors /////////////////////////////////////////////
 class Vec3 {
 public:
 
@@ -95,13 +94,13 @@ public:
     return lhs /= sc;
   }
 
-  //dot product ////////////////////////////////////////////////
+  // dot product ////////////////////////////////////////////////
   double operator*=(const Vec3& rhs);
   inline friend double operator*(Vec3 lhs, const Vec3& rhs) {
     return lhs *= rhs;
   }
 
-  //cross product //////////////////////////////////////////////
+  // cross product //////////////////////////////////////////////
   inline friend Vec3 operator%(const Vec3& lhs, const Vec3& rhs) {
     Vec3 ret;
 
@@ -124,4 +123,4 @@ public:
   void   FScan(FILE* fp);
   void   FPrint(FILE* fp) const;
 };
-#endif //ifndef VEC3_H
+#endif // ifndef VEC3_H

@@ -1,4 +1,5 @@
 #include <GLFW/glfw3.h>
+#include <functional>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +7,7 @@
 
 #include <iostream>
 
+#include "include/animated_cube.hpp"
 #include "include/cube.hpp"
 #include "include/pyramid.hpp"
 #include "include/sphere.hpp"
@@ -13,21 +15,22 @@
 static double window_width_  = 1024;
 static double window_height_ = 768;
 
-static double global_x_translation_      = 0;
-static double global_y_translation_      = 0;
-static double global_z_translation_      = -15;
+static double global_x_translation_ = 0;
+static double global_y_translation_ = 0;
+static double global_z_translation_ = -15;
 static double global_x_translation_prev_ = global_x_translation_;
 static double global_y_translation_prev_ = global_y_translation_;
 static double global_z_translation_prev_ = global_z_translation_;
 
-static double global_x_rotation_      = 0;
-static double global_y_rotation_      = 0;
-static double global_z_rotation_      = 0;
+static double global_x_rotation_ = 0;
+static double global_y_rotation_ = 0;
+static double global_z_rotation_ = 0;
 
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
 static std::vector<Drawable*> objects_;
+static std::vector<std::function<void(int, int)> > key_callbacks_;
 
 /**
  * The function will add / decrease the global zoom / the distance to 0,0,0
@@ -42,9 +45,8 @@ void mouse_scroll_callback(GLFWwindow* window, double x_offset,
 }
 
 /**
- * The function will update the previous values of the global rotation if the
- * CTRL-key is no longer pressed and the mouse position to prevent jumping.
- * If the CTRL-KEy is pressed it will update the translation values.
+ * The function will go through a vector with funtions and pass them as
+ * parameter int key and int action.
  *
  * @param window   Will hold the window that received the event
  * @param key      Will hold the number of the key that triggered the event
@@ -54,20 +56,13 @@ void mouse_scroll_callback(GLFWwindow* window, double x_offset,
  * @param mods     Will hold Bit field that describes which modifier keys were
  *                 held down.
  */
-void key_callback(GLFWwindow* window, int key, int scancode,
-                  int action, int mods) {
-  if(key == 341 ) {
-    double x_pos, y_pos;
-    glfwGetCursorPos(window, &x_pos, &y_pos);
+void key_callback(GLFWwindow* window, int key, int scancode, int action,
+                  int mods) {
+  std::cout << key << std::endl;
 
-    mouse_down_x_ = x_pos;
-    mouse_down_y_ = y_pos;
-
-    if(action == GLFW_PRESS && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
-      global_x_translation_prev_ = global_x_translation_;
-      global_y_translation_prev_ = global_y_translation_;
-      global_z_translation_prev_ = global_z_translation_;
-    }
+  for(std::vector<std::function<void(int, int)> >::iterator i
+        = key_callbacks_.begin(); i != key_callbacks_.end(); ++i) {
+    (*i)(key, action);
   }
 }
 
@@ -90,7 +85,7 @@ void mouse_position_callback(GLFWwindow* window, double x_pos, double y_pos) {
       global_z_rotation_ = global_z_rotation_
                            + (x_pos - mouse_down_x_) / 8;
 
-      glfwSetCursorPos(window, mouse_down_x_,mouse_down_y_);
+      glfwSetCursorPos(window, mouse_down_x_, mouse_down_y_);
     } else {
       global_x_translation_ = global_x_translation_prev_
                               + (x_pos - mouse_down_x_) / 35.5;
@@ -122,7 +117,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
       mouse_down_x_ = x_pos;
       mouse_down_y_ = y_pos;
     } else {
-
       global_x_translation_prev_ = global_x_translation_;
       global_y_translation_prev_ = global_y_translation_;
       global_z_translation_prev_ = global_z_translation_;
@@ -132,14 +126,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
 
 /**
  * The function will initialise GLFW.
- * 
+ *
  * @param  window Reference Pointer to a variable for the created window
  * @return        May return an error code 0 for success negative for failure
  */
 int init_glfw(GLFWwindow*& window) {
-  if(!glfwInit())
-    return -1;
+  if(!glfwInit()) return -1;
 
+  // Antialiasing
+  glfwWindowHint(GLFW_SAMPLES, 4);
   window = glfwCreateWindow(window_width_, window_height_,
                             "Simple 3D Animation", NULL, NULL);
   if(!window) {
@@ -155,6 +150,32 @@ int init_glfw(GLFWwindow*& window) {
 
   glfwSetKeyCallback(window, &key_callback);
 
+  // TODO clean up - make a system that will make all callbacks on initialisation
+
+  /*
+  * The function will update the previous values of the global rotation if the
+  * CTRL-key is no longer pressed and the mouse position to prevent jumping.
+  * If the CTRL-KEy is pressed it will update the translation values.
+  */
+  key_callbacks_.push_back(
+    [window](int event, int action) {
+      if(event == 341) {
+        double x_pos, y_pos;
+        glfwGetCursorPos(window, &x_pos, &y_pos);
+
+        mouse_down_x_ = x_pos;
+        mouse_down_y_ = y_pos;
+
+        if((action == GLFW_PRESS)
+           && (glfwGetMouseButton(window,
+                                  0) == GLFW_PRESS)) {
+          global_x_translation_prev_ = global_x_translation_;
+          global_y_translation_prev_ = global_y_translation_;
+          global_z_translation_prev_ = global_z_translation_;
+        }
+      }
+    });
+
   return 0;
 }
 
@@ -166,19 +187,19 @@ void init_view() {
   glClearColor(0.8, 0.8, 0.8, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  //Reset view
+  // Reset view
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  //glOrtho(-15, 15, -10, 10, -20, 20);
+  // glOrtho(-15, 15, -10, 10, -20, 20);
   glFrustum(-1, 1, -1, 1, 1, 200);
 
-  //Reset modelview
+  // Reset modelview
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  //Apply gobal movement
+  // Apply gobal movement
   glTranslated(global_x_translation_, global_y_translation_,
                global_z_translation_);
-  //Apply global rotation
+  // Apply global rotation
   glRotated(global_x_rotation_, 1, 0, 0);
   glRotated(global_y_rotation_, 0, 1, 0);
   glRotated(global_z_rotation_, 0, 0, 1);
@@ -189,12 +210,12 @@ void init_view() {
  */
 void init_lighting() {
   GLfloat ambient[]     = {1.5, 1.5, 1.5, 1};
-  GLfloat red_color[]   = {0.5, 0, 0, 1}; //rgb ? a?
+  GLfloat red_color[]   = {0.5, 0, 0, 1}; // rgb ? a?
   GLfloat green_color[] = {0, 0.5, 0, 1};
   GLfloat blue_color[]  = {0, 0, 0.5, 1};
   GLfloat white_color[] = {1.5, 1.5, 1.5, 1};
 
-  GLfloat pos_1[] = {2, 2, 10, 1}; //rgbw <- w @0 = infinity
+  GLfloat pos_1[] = {2, 2, 10, 1}; // rgbw <- w @0 = infinity
   GLfloat pos_2[] = {-2, -2, -10, 1};
   GLfloat pos_3[] = {2, -2, 10, 1};
   GLfloat pos_4[] = {-2, 2, -10, 1};
@@ -203,27 +224,27 @@ void init_lighting() {
   glDepthFunc(GL_LESS);
 
   glShadeModel(GL_SMOOTH);
-  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
+  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
   glEnable(GL_LIGHTING);
 
   glLightfv(GL_LIGHT1, GL_POSITION, pos_1);
-  glLightfv(GL_LIGHT1, GL_DIFFUSE, red_color);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE,  red_color);
   glLightfv(GL_LIGHT1, GL_SPECULAR, white_color);
-  //glEnable(GL_LIGHT1);
+  // glEnable(GL_LIGHT1);
 
   glLightfv(GL_LIGHT2, GL_POSITION, pos_2);
-  glLightfv(GL_LIGHT2, GL_DIFFUSE, green_color);
+  glLightfv(GL_LIGHT2, GL_DIFFUSE,  green_color);
   glLightfv(GL_LIGHT2, GL_SPECULAR, white_color);
-  //glEnable(GL_LIGHT2);
+  // glEnable(GL_LIGHT2);
 
   glLightfv(GL_LIGHT3, GL_POSITION, pos_3);
-  glLightfv(GL_LIGHT3, GL_DIFFUSE, blue_color);
+  glLightfv(GL_LIGHT3, GL_DIFFUSE,  blue_color);
   glLightfv(GL_LIGHT3, GL_SPECULAR, white_color);
-  //glEnable(GL_LIGHT3);
+  // glEnable(GL_LIGHT3);
 
   glLightfv(GL_LIGHT4, GL_POSITION, pos_4);
-  glLightfv(GL_LIGHT4, GL_DIFFUSE, white_color);
+  glLightfv(GL_LIGHT4, GL_DIFFUSE,  white_color);
   glLightfv(GL_LIGHT4, GL_SPECULAR, white_color);
   glEnable(GL_LIGHT4);
 }
@@ -239,14 +260,25 @@ void make_objects() {
   objects_.push_back(new Pyramid(3, 3, 0, 1));
   objects_.push_back(new Pyramid(3, 3, 3, 1));
   objects_.push_back(new Cube(0, 0, 0, 1));
+  objects_.push_back(new AnimatedCube(0, 0, 4, 1));
+
+  // TODO clean up
 
   objects_.at(0)->set_color(0.5, 0, 1, true);
   objects_.at(1)->set_color(1, 0, .5, true);
   objects_.at(2)->set_color(0.5, 1, 0, true);
   objects_.at(3)->set_color(1, .5, 0, true);
 
-  (*(objects_.end() - 1))->set_color(1, 0, 0, false);
   (*(objects_.end() - 1))->set_color(0, 0, 1, true);
+  (*(objects_.end() - 1))->set_color(1, 0, 0, false);
+  key_callbacks_.push_back(
+    ((AnimatedCube*)(*(objects_.end() - 1)))->open_key_callback(79));            // 79 = o
+  key_callbacks_.push_back(
+    ((AnimatedCube*)(*(objects_.end() - 1)))->close_key_callback(67));           // 67 = c
+  key_callbacks_.push_back(
+    ((AnimatedCube*)(*(objects_.end() - 1)))->scale_up_key_callback(93, 0.5));   // 93 = +
+  key_callbacks_.push_back(
+    ((AnimatedCube*)(*(objects_.end() - 1)))->scale_down_key_callback(47, 0.5)); // 47 = c
 }
 
 /**
@@ -260,10 +292,9 @@ void draw() {
   }
 }
 
-
 int main() {
   GLFWwindow* window = NULL;
-  int error          = 0;
+  int error = 0;
 
   printf("Here we go!\n");
 

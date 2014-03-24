@@ -16,9 +16,8 @@ public:
           double size_y, double size_z);
   ~Pyramid();
 
-  virtual void draw() const;
+  virtual void draw();
   virtual void set_size(double base_size, double height);
 };
 
-
-#endif //ifndef PYRAMID_HPP
+#endif // ifndef PYRAMID_HPP

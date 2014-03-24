@@ -7,7 +7,7 @@ class Cube : public Drawable {
 protected:
 
   virtual void set_size(double x, double y, double z);
-  
+
 public:
 
   Cube();
@@ -16,9 +16,8 @@ public:
        double size_y, double size_z);
   ~Cube();
 
-  virtual void draw() const;
+  virtual void draw();
   virtual void set_size(double size);
 };
 
-
-#endif //ifndef CUBE_HPP
+#endif // ifndef CUBE_HPP

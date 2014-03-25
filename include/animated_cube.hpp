@@ -2,7 +2,6 @@
 #define ANIMATED_CUBE_HPP
 
 #include "include/cube.hpp"
-#include <functional>
 #include <math.h>
 
 #include <iostream>
@@ -36,12 +35,11 @@ public:
                double size_y, double size_z);
   ~AnimatedCube();
 
-  virtual void                         draw();
-  virtual void                         set_size(double size);
+  virtual void draw();
+  virtual void set_size(double size);
 
-  virtual std::function<void(int, int)>open_key_callback(const int trigger);
-
-  virtual std::function<void(int, int)>close_key_callback(const int trigger);
+  void         open();
+  void         close();
 };
 
 #endif // ifndef ANIMATED_CUBE_HPP

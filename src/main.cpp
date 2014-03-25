@@ -226,8 +226,7 @@ int init_glfw(GLFWwindow*& window) {
         mouse_down_y_ = y_pos;
 
         if((action == GLFW_PRESS)
-           && (glfwGetMouseButton(window,
-                                  0) == GLFW_PRESS)) {
+           && (glfwGetMouseButton(window, 0) == GLFW_PRESS)) {
           global_x_translation_prev_ = global_x_translation_;
           global_y_translation_prev_ = global_y_translation_;
           global_z_translation_prev_ = global_z_translation_;
@@ -250,7 +249,7 @@ void init_view() {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   // glOrtho(-15, 15, -10, 10, -20, 20);
-  glFrustum(-1, 1, -1, 1, 1, 200);
+  glFrustum(-.5, .5, -.5, .5, 1, 200);
 
   // Reset modelview
   glMatrixMode(GL_MODELVIEW);
@@ -274,7 +273,7 @@ void init_lighting() {
   GLfloat blue_color[]  = {0, 0, 0.5, 1};
   GLfloat white_color[] = {1.5, 1.5, 1.5, 1};
 
-  GLfloat pos_1[] = {2, 2, 10, 1}; // rgbw <- w @0 = infinity
+  GLfloat pos_1[] = {2, 2, 10, 1}; // rgbw
   GLfloat pos_2[] = {-2, -2, -10, 1};
   GLfloat pos_3[] = {2, -2, 10, 1};
   GLfloat pos_4[] = {-2, 2, -10, 1};
@@ -312,32 +311,59 @@ void init_lighting() {
  * The function will create all objects to be rendered
  */
 void make_objects() {
-  objects_.push_back(new Sphere(-3, 0, 0, .5));
-  objects_.push_back(new Sphere(-3, -3, 0, .5));
-  objects_.push_back(new Sphere(-3, -3, -3, .5));
-  objects_.push_back(new Pyramid(3, 0, 0, 1));
-  objects_.push_back(new Pyramid(3, 3, 0, 1));
-  objects_.push_back(new Pyramid(3, 3, 3, 1));
-  objects_.push_back(new Cube(0, 0, 0, 1));
-  objects_.push_back(new AnimatedCube(0, 0, 4, 1));
+  Drawable* temp = new Sphere(-3, 0, 0, .5);
 
-  // TODO clean up
+  temp->set_color(.5, 0, 1, true);
+  objects_.push_back(temp);
 
-  objects_.at(0)->set_color(0.5, 0, 1, true);
-  objects_.at(1)->set_color(1, 0, .5, true);
-  objects_.at(2)->set_color(0.5, 1, 0, true);
-  objects_.at(3)->set_color(1, .5, 0, true);
+  temp = new Sphere(-3, -3, 0, .5);
+  temp->set_color(1, 0, .5, true);
+  objects_.push_back(temp);
 
-  (*(objects_.end() - 1))->set_color(0, 0, 1, true);
-  (*(objects_.end() - 1))->set_color(1, 0, 0, false);
+  temp = new Sphere(-3, -3, -3, .5);
+  temp->set_color(.5, 1, 0, true);
+  objects_.push_back(temp);
+
+  temp = new Pyramid(3, 0, 0, 1);
+  temp->set_color(1, .5, 0, true);
+  objects_.push_back(temp);
+
+  temp = new Pyramid(3, 3, 0, 1);
+  temp->set_color(0, 1, .5, true);
+  objects_.push_back(temp);
+
+  temp = new Pyramid(3, 3, 3, 1);
+  temp->set_color(0.25, .75, 0, true);
+  objects_.push_back(temp);
+
+  temp = new Cube(0, 0, 0, 1);
+  temp->set_color(0.5, 0.5, 1, true);
+  objects_.push_back(temp);
+
+  temp = new AnimatedCube(0, 0, 4, 1);
+  temp->set_color(0, 0, 1, true);
+  temp->set_color(1, 0, 0, false);
   key_callbacks_.push_back(
-    ((AnimatedCube*)(*(objects_.end() - 1)))->open_key_callback(79));            // 79 = o
+    [temp](int event, int action) {
+      if((GLFW_KEY_O == event) && (action == 1))
+        ((AnimatedCube*)temp)->open();
+    });
   key_callbacks_.push_back(
-    ((AnimatedCube*)(*(objects_.end() - 1)))->close_key_callback(67));           // 67 = c
+    [temp](int event, int action) {
+      if((GLFW_KEY_C == event) && (action == 1))
+        ((AnimatedCube*)temp)->close();
+    });
   key_callbacks_.push_back(
-    ((AnimatedCube*)(*(objects_.end() - 1)))->scale_up_key_callback(93, 0.5));   // 93 = +
+    [temp](int event, int action) {
+      if((93 == event) && (action == 1)) // 93 = +
+        temp->set_scale(temp->get_scale() + .5);
+    });
   key_callbacks_.push_back(
-    ((AnimatedCube*)(*(objects_.end() - 1)))->scale_down_key_callback(47, 0.5)); // 47 = c
+    [temp](int event, int action) {
+      if((47 == event) && (action == 1)) // 47 = -
+        temp->set_scale(temp->get_scale() - .5);
+    });
+  objects_.push_back(temp);
 }
 
 /**

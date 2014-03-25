@@ -73,44 +73,6 @@ void Drawable::rotate_from(double x_angle, double y_angle, double z_angle,
   glRotatef(z_angle, 0.0f, 0.0f,    1);
 }
 
-/**
- * The function will return a function that can handle a key event.
- * The returned function will change the scale of the object
- * @param  trigger number that represents the key pressed
- * @param  amount  amount the scale is increased by
- * @return         function that will increase the scale of the object
- */
-std::function<void(int, int)>
-Drawable::scale_up_key_callback(const int trigger, const float amount) {
-  std::function<void(int event, int action)> callback
-    = [this, trigger, amount](int event, int action) {
-        if((trigger == event) && (action == 1)) {
-          scale_ += amount;
-        }
-      };
-
-  return callback;
-}
-
-/**
- * The function will return a function that can handle a key event.
- * The returned function will change the scale of the object
- * @param  trigger number that represents the key pressed
- * @param  amount  amount the scale is decreased by
- * @return         function that will decrease the scale of the object
- */
-std::function<void(int, int)>
-Drawable::scale_down_key_callback(const int trigger, const float amount) {
-  std::function<void(int event, int action)> callback
-    = [this, trigger, amount](int event, int action) {
-        if((trigger == event) && (action == 1)) {
-          scale_ -= amount;
-        }
-      };
-
-  return callback;
-}
-
 Vec3 Drawable::get_origin() const {
   return origin_;
 }
@@ -213,4 +175,12 @@ float Drawable::get_color_blue(bool outside = true) {
 
 void Drawable::set_color_blue(float b, bool outside = true) {
   color_[outside ? 2 : 5] = b;
+}
+
+void Drawable::set_scale(float scale) {
+  scale_ = scale;
+}
+
+float Drawable::get_scale() {
+  return scale_;
 }

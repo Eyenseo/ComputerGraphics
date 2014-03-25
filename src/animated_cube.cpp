@@ -1,5 +1,7 @@
 #include "include/animated_cube.hpp"
 
+#include <functional>
+
 AnimatedCube::AnimatedCube()
   : Cube(),
   state_(CLOSED),
@@ -110,8 +112,8 @@ void AnimatedCube::draw() {
   glEnd();
 
   // Left
-  glPopMatrix();
-  glPopMatrix();
+  // glPopMatrix();
+  // glPopMatrix();
   glPopMatrix();
   rotate_from(0, 90, 0, -half_length, 0, 0);
   glBegin(GL_QUADS);
@@ -155,38 +157,10 @@ void AnimatedCube::set_size(double x, double y, double z) {
   boundingbox_[2] = z;
 }
 
-/**
- * The function will return a function that can handle a key event.
- * The returned function will enable the opening sequence of the cube lid
- * @param  trigger number that represents the key pressed
- * @return         function that will start the opening sequence of the cube lid
- */
-std::function<void(int,
-                   int)>AnimatedCube::open_key_callback(const int trigger) {
-  std::function<void(int event, int action)> callback
-    = [this, trigger](int event, int action) {
-        if((trigger == event) && (action == 1)) {
-          state_ = OPENING;
-        }
-      };
-
-  return callback;
+void AnimatedCube::open() {
+  state_ = OPENING;
 }
 
-/**
- * The function will return a function that can handle a key event.
- * The returned function will enable the closing sequence of the cube lid
- * @param  trigger number that represents the key pressed
- * @return         function that will start the closing sequence of the cube lid
- */
-std::function<void(int,
-                   int)>AnimatedCube::close_key_callback(const int trigger) {
-  std::function<void(int event, int action)> callback
-    = [this, trigger](int event, int action) {
-        if((trigger == event) && (action == 1)) {
-          state_ = CLOSING;
-        }
-      };
-
-  return callback;
+void AnimatedCube::close() {
+  state_ = CLOSING;
 }

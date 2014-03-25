@@ -4,8 +4,6 @@
 #include "vec3.hpp"
 #include <GL/gl.h>
 
-#include <functional>
-
 class Drawable {
 protected:
 
@@ -29,52 +27,50 @@ public:
 
   ~Drawable();
 
-  virtual void                         draw() = 0;
+  virtual void         draw() = 0;
 
-  virtual Vec3                         get_origin() const;
-  virtual void                         set_origin(double origin_x,
-                                                  double origin_y,
-                                                  double origin_z);
-  virtual void                         set_origin(const Vec3& origin);
+  virtual Vec3         get_origin() const;
+  virtual void         set_origin(double origin_x,
+                                  double origin_y,
+                                  double origin_z);
+  virtual void         set_origin(const Vec3& origin);
 
-  virtual double                       get_origin_x() const;
-  virtual void                         set_origin_x(double origin_x);
+  virtual double       get_origin_x() const;
+  virtual void         set_origin_x(double origin_x);
 
-  virtual double                       get_origin_y() const;
-  virtual void                         set_origin_y(double origin_y);
+  virtual double       get_origin_y() const;
+  virtual void         set_origin_y(double origin_y);
 
-  virtual double                       get_origin_z() const;
-  virtual void                         set_origin_z(double origin_z);
+  virtual double       get_origin_z() const;
+  virtual void         set_origin_z(double origin_z);
 
-  virtual const double*                get_boundingbox() const;
+  virtual const double*get_boundingbox() const;
 
-  virtual const float*                 get_rotation() const;
+  virtual const float* get_rotation() const;
 
-  virtual float                        get_rotation_x() const;
-  virtual void                         set_rotation_x(float rotation);
+  virtual float        get_rotation_x() const;
+  virtual void         set_rotation_x(float rotation);
 
-  virtual float                        get_rotation_y() const;
-  virtual void                         set_rotation_y(float rotation);
+  virtual float        get_rotation_y() const;
+  virtual void         set_rotation_y(float rotation);
 
-  virtual float                        get_rotation_z() const;
-  virtual void                         set_rotation_z(float rotation);
+  virtual float        get_rotation_z() const;
+  virtual void         set_rotation_z(float rotation);
 
-  virtual const float*                 get_color();
-  virtual void                         set_color(float r, float g, float b,
-                                                 bool outside);
+  virtual const float* get_color();
+  virtual void         set_color(float r, float g, float b,
+                                 bool outside);
 
-  virtual float                        get_color_red(bool outside);
-  virtual void                         set_color_red(float r, bool outside);
+  virtual float        get_color_red(bool outside);
+  virtual void         set_color_red(float r, bool outside);
 
-  virtual float                        get_color_green(bool outside);
-  virtual void                         set_color_green(float g, bool outside);
+  virtual float        get_color_green(bool outside);
+  virtual void         set_color_green(float g, bool outside);
 
-  virtual float                        get_color_blue(bool outside);
-  virtual void                         set_color_blue(float b, bool outside);
+  virtual float        get_color_blue(bool outside);
+  virtual void         set_color_blue(float b, bool outside);
 
-  virtual std::function<void(int, int)>scale_up_key_callback(const int trigger,
-                                                             const float amount);
-  virtual std::function<void(int, int)>scale_down_key_callback(
-    const int trigger, const float amount);
+  virtual void         set_scale(float scale);
+  virtual float        get_scale();
 };
 #endif // ifndef DRAWABLE_HPP

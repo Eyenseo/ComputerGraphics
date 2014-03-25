@@ -1,11 +1,11 @@
 #include <GLFW/glfw3.h>
 #include <functional>
+#include <iostream>
 #include <math.h>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-
-#include <iostream>
 
 #include "include/animated_cube.hpp"
 #include "include/cube.hpp"
@@ -31,6 +31,65 @@ static int mouse_down_y_ = 0;
 
 static std::vector<Drawable*> objects_;
 static std::vector<std::function<void(int, int)> > key_callbacks_;
+
+/**
+ * Function taken from http://r3dux.org/2012/07/a-simple-glfw-fps-counter/
+ *
+ * @param  time_interval time interval for fps check
+ * @param  window       pointer to window to receive the FPS in the title
+ * @param  window_title  Window title before FPS
+ * @return              FPS as double
+ */
+double calcFPS(double time_interval = 1.0, GLFWwindow* window = NULL,
+               std::string window_title = "") {
+  // Static values which only get initialised the first time the function runs
+  static double start_time = glfwGetTime(); // Set the initial time to now
+  static double fps = 0.0;                  // Set the initial FPS value to 0.0
+
+  // Set the initial frame count to -1.0 (it gets set to 0.0 on the next line). Because
+  // we don't have a start time we simply cannot get an accurate FPS value on our very
+  // first read if the time interval is zero, so we'll settle for an FPS value of zero instead.
+  static double frame_count = -1.0;
+
+  // Here again? Increment the frame count
+  frame_count++;
+
+  // Ensure the time interval between FPS checks is sane (low cap = 0.0 i.e. every frame, high cap = 10.0s)
+  if(time_interval < 0.0) {
+    time_interval = 0.0;
+  } else if(time_interval > 10.0) {
+    time_interval = 10.0;
+  }
+
+  // Get the duration in seconds since the last FPS reporting interval elapsed
+  // as the current time minus the interval start time
+  double duration = glfwGetTime() - start_time;
+
+  // If the time interval has elapsed...
+  if(duration > time_interval) {
+    // Calculate the FPS as the number of frames divided by the duration in seconds
+    fps = frame_count / duration;
+
+    // If the user specified a window title to append the FPS value to...
+    if(window != NULL) {
+      // Convert the fps value into a string using an output stringstream
+      std::ostringstream stream;
+      stream << fps;
+      std::string fps_string = stream.str();
+
+      // Append the FPS value to the window title details
+      window_title += " | FPS: " + fps_string;
+
+      const char* c_str_window_title = window_title.c_str();
+      glfwSetWindowTitle(window, c_str_window_title);
+    }
+
+    // Reset the frame count to zero and set the initial time to be now
+    frame_count = 0.0;
+    start_time  = glfwGetTime();
+  }
+  return fps;
+}
 
 /**
  * The function will add / decrease the global zoom / the distance to 0,0,0
@@ -309,6 +368,8 @@ int main() {
     init_lighting();
 
     draw();
+
+    calcFPS(1, window, "Simple 3D Animation");
 
     glfwSwapBuffers(window);
 

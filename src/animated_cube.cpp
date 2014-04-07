@@ -10,18 +10,17 @@ AnimatedCube::AnimatedCube()
   current_angle_(0),
   animation_time_(0) {}
 
-AnimatedCube::AnimatedCube(double origin_x, double origin_y, double origin_z,
-                           double size = 1)
-  : Cube(origin_x, origin_y, origin_z, size),
+AnimatedCube::AnimatedCube(float origin_x, float origin_y, float origin_z)
+  : Cube(origin_x, origin_y, origin_z),
   state_(CLOSED),
   open_angel_(120),
   closed_angel_(0),
   current_angle_(0),
   animation_time_(0) {}
 
-AnimatedCube::AnimatedCube(double origin_x, double origin_y, double origin_z,
-                           double size_x, double size_y, double size_z)
-  : Cube(origin_x, origin_y, origin_z, size_x, size_y, size_z),
+AnimatedCube::AnimatedCube(float origin_x, float origin_y, float origin_z,
+                           unsigned char colors)
+  : Cube(origin_x, origin_y, origin_z, colors),
   state_(CLOSED),
   open_angel_(120),
   closed_angel_(0),
@@ -31,8 +30,8 @@ AnimatedCube::AnimatedCube(double origin_x, double origin_y, double origin_z,
 AnimatedCube::~AnimatedCube() {}
 
 /**
- * Calculates the new angel of the lid of the box
- */
+* Calculates the new angel of the lid of the box
+*/
 void AnimatedCube::calculate_current_angle() {
   if(((state_ == OPENING) && (state_ != OPEN))
      || ((state_ == CLOSING) && (state_ != CLOSED))) {
@@ -65,96 +64,70 @@ void AnimatedCube::calculate_current_angle() {
 }
 
 void AnimatedCube::draw() {
-  double half_length = .5 * boundingbox_[0];
-
-  Vec3 bottom_left  = Vec3(-half_length, -half_length, 0);
-  Vec3 top_left     = Vec3(-half_length, half_length, 0);
-  Vec3 top_right    = Vec3(half_length, half_length, 0);
-  Vec3 bottom_right = Vec3(half_length, -half_length, 0);
+  GLVector<XYZW> bottom_left  = GLVector<XYZW>(-.5, -.5, 0, 1);
+  GLVector<XYZW> top_left     = GLVector<XYZW>(-.5, .5, 0, 1);
+  GLVector<XYZW> top_right    = GLVector<XYZW>(.5, .5, 0, 1);
+  GLVector<XYZW> bottom_right = GLVector<XYZW>(.5, -.5, 0, 1);
 
   auto face
-    = [this](const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& v4) {
-        Vec3 normal = (v2 - v1) % (v3 - v1);
+    = [this](const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
+             const GLVector<XYZW>& v3, const GLVector<XYZW>& v4) {
+        GLVector<XYZ> normal = (v2 - v1) % (v3 - v1);
 
-        normal.Normalize();
-
-        glNormal3dv(normal.p);
-        glVertex3dv(v1.p);
-        glVertex3dv(v2.p);
-        glVertex3dv(v3.p);
-        glVertex3dv(v4.p);
+        glBegin(GL_QUADS);
+        glNormal3fv(normal);
+        glVertex3fv(v1);
+        glVertex3fv(v2);
+        glVertex3fv(v3);
+        glVertex3fv(v4);
+        glEnd();
       };
 
   calculate_current_angle();
 
-  SetMaterialColor(1, true);
-  SetMaterialColor(2, false);
+  set_material_color(1, 0);
+  set_material_color(2, 1);
 
-  glEnable(GL_RESCALE_NORMAL);
+  // glEnable(GL_RESCALE_NORMAL);
 
-  rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_.p[0],
-              origin_.p[1], origin_.p[2]);
-  glScalef(scale_, scale_, scale_);
+  rotate_from(rotation_[0], rotation_[1], rotation_[2],
+              origin_[0], origin_[1], origin_[2]);
+  glScalef(scale_[0], scale_[1], scale_[2]);
 
   // Bottom
-  rotate_from(0, 0, 0, 0, 0, -half_length);
-  glBegin(GL_QUADS);
+  rotate_from(0, 0, 0, 0, 0, -.5);
   face(top_left, top_right, bottom_right, bottom_left);
   glEnd();
 
   // Top
   glPopMatrix();
-  rotate_from(180,             0, 0, 0,           0,  half_length); // move up and flip
-  rotate_from(-current_angle_, 0, 0, 0,           -half_length, 0); // move to the back and rotate
-  rotate_from(0,               0, 0, 0, half_length,            0); // move back to centre
-  glBegin(GL_QUADS);
+  rotate_from(180,             0, 0, 0,  0,  .5); // move up and flip
+  rotate_from(-current_angle_, 0, 0, 0,  -.5, 0); // move to the back and rotate
+  rotate_from(0,               0, 0, 0, .5,   0); // move back to centre
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Left
-  // glPopMatrix();
-  // glPopMatrix();
   glPopMatrix();
-  rotate_from(0, 90, 0, -half_length, 0, 0);
-  glBegin(GL_QUADS);
+  rotate_from(0, 90, 0, -.5, 0, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Back
   glPopMatrix();
-  rotate_from(90, 0, 0, 0, half_length, 0);
-  glBegin(GL_QUADS);
+  rotate_from(90, 0, 0, 0, .5, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Right
   glPopMatrix();
-  rotate_from(0, 270, 0, half_length, 0, 0);
-  glBegin(GL_QUADS);
+  rotate_from(0, 270, 0, .5, 0, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Front
   glPopMatrix();
-  rotate_from(90, 180, 0, 0, -half_length, 0);
-  glBegin(GL_QUADS);
+  rotate_from(90, 180, 0, 0, -.5, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   glPopMatrix();
   glPopMatrix();
-}
-
-void AnimatedCube::set_size(double size) {
-  boundingbox_[0] = size;
-  boundingbox_[1] = size;
-  boundingbox_[2] = size;
-}
-
-void AnimatedCube::set_size(double x, double y, double z) {
-  boundingbox_[0] = x;
-  boundingbox_[1] = y;
-  boundingbox_[2] = z;
 }
 
 void AnimatedCube::open() {

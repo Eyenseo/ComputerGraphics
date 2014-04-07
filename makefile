@@ -9,7 +9,7 @@ inc = .
 
 debug = 1
 
-CFlags = -Wall -Wextra -std=gnu++11
+CFlags = -Wall -Wextra -std=c++11 
 LDFlags =
 libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi
 libDir =

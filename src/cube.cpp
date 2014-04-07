@@ -1,104 +1,93 @@
 #include "include/cube.hpp"
 
-Cube::Cube() : Drawable() {}
+#include <sstream>
 
-Cube::Cube(double origin_x, double origin_y, double origin_z, double size
-             = 1)  :
-  Drawable(origin_x, origin_y, origin_z) {
-  set_size(size, size, size);
-}
+Cube::Cube()
+  : Drawable() {}
 
-Cube::Cube(double origin_x, double origin_y, double origin_z, double size_x,
-           double size_y, double size_z)  :
-  Drawable(origin_x, origin_y, origin_z) {
-  set_size(size_x, size_y, size_z);
-}
+Cube::Cube(float origin_x, float origin_y, float origin_z)
+  : Drawable(origin_x, origin_y, origin_z) {}
+
+Cube::Cube(float origin_x, float origin_y, float origin_z, unsigned char colors)
+  : Drawable(origin_x, origin_y, origin_z, colors)  {}
 
 Cube::~Cube() {}
 
 void Cube::draw() {
-  double half_length = .5 * boundingbox_[0];
-
-  Vec3 bottom_left  = Vec3(-half_length, -half_length, 0);
-  Vec3 top_left     = Vec3(-half_length, half_length, 0);
-  Vec3 top_right    = Vec3(half_length, half_length, 0);
-  Vec3 bottom_right = Vec3(half_length, -half_length, 0);
+  GLVector<XYZW> bottom_left  = GLVector<XYZW>(-.5, -.5, 0, 1);
+  GLVector<XYZW> top_left     = GLVector<XYZW>(-.5, .5, 0, 1);
+  GLVector<XYZW> top_right    = GLVector<XYZW>(.5, .5, 0, 1);
+  GLVector<XYZW> bottom_right = GLVector<XYZW>(.5, -.5, 0, 1);
 
   auto face
-    = [](const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& v4) {
-        Vec3 normal = (v2 - v1) % (v3 - v1);
+    = [&](const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
+          const GLVector<XYZW>& v3, const GLVector<XYZW>& v4) {
+        GLVector<XYZ> normal = (v2 - v1) % (v3 - v1);
 
+        glBegin(GL_QUADS);
         normal.Normalize();
-
-        glNormal3dv(normal.p);
-        glVertex3dv(v1.p);
-        glVertex3dv(v2.p);
-        glVertex3dv(v3.p);
-        glVertex3dv(v4.p);
+        glNormal3fv(normal);
+        glVertex3fv(v1);
+        glVertex3fv(v2);
+        glVertex3fv(v3);
+        glVertex3fv(v4);
+        glEnd();
       };
 
-  SetMaterialColor(1, true);
-  SetMaterialColor(2, false);
+  // faces_->clear();
 
-  glEnable(GL_RESCALE_NORMAL);
+  set_material_color(1, 0);
 
-  rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_.p[0],
-              origin_.p[1], origin_.p[2]);
-  glScalef(scale_, scale_, scale_);
+  // glEnable(GL_RESCALE_NORMAL); // TODO Needed?
+  glMatrixMode(GL_MODELVIEW);
+  rotate_from(rotation_[0], rotation_[1], rotation_[2],
+              origin_[0], origin_[1], origin_[2]);
+  glScalef(scale_[0], scale_[1], scale_[2]);
+
+  glGetFloatv(GL_MODELVIEW_MATRIX, model_view);
+  // auto mat_out = [&]() -> std::string {
+  // std::ostringstream ss;
+
+  // for(unsigned int m = 0; m < 4; m++) {
+  // for(int n = 0; n < 4; n++) {
+  // ss << model_view[m + n * 4] << '\t' << '\t';
+  // }
+  // ss << '\n';
+  // }
+  // return ss.str();
+  // };
+
+  // std::cout << mat_out() << std::endl;
 
   // Bottom
-  rotate_from(0, 0, 0, 0, 0, -half_length);
-  glBegin(GL_QUADS);
+  rotate_from(0, 0, 0, 0, 0, -.5);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Top
   glPopMatrix();
-  rotate_from(180, 0, 0, 0, 0, half_length);
-  glBegin(GL_QUADS);
+  rotate_from(180, 0, 0, 0, 0, .5);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Left
   glPopMatrix();
-  rotate_from(0, 90, 0, -half_length, 0, 0);
-  glBegin(GL_QUADS);
+  rotate_from(0, 90, 0, -.5, 0, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Back
   glPopMatrix();
-  rotate_from(90, 0, 0, 0, half_length, 0);
-  glBegin(GL_QUADS);
+  rotate_from(90, 0, 0, 0, .5, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Right
   glPopMatrix();
-  rotate_from(0, 270, 0, half_length, 0, 0);
-  glBegin(GL_QUADS);
+  rotate_from(0, 270, 0, .5, 0, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   // Top
   glPopMatrix();
-  rotate_from(90, 180, 0, 0, -half_length, 0);
-  glBegin(GL_QUADS);
+  rotate_from(90, 180, 0, 0, -.5, 0);
   face(top_left, top_right, bottom_right, bottom_left);
-  glEnd();
 
   glPopMatrix();
   glPopMatrix();
-}
-
-void Cube::set_size(double size) {
-  boundingbox_[0] = size;
-  boundingbox_[1] = size;
-  boundingbox_[2] = size;
-}
-
-void Cube::set_size(double x, double y, double z) {
-  boundingbox_[0] = x;
-  boundingbox_[1] = y;
-  boundingbox_[2] = z;
 }

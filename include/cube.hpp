@@ -4,20 +4,14 @@
 #include "drawable.hpp"
 
 class Cube : public Drawable {
-protected:
-
-  virtual void set_size(double x, double y, double z);
-
 public:
 
   Cube();
-  Cube(double origin_x, double origin_y, double origin_z, double size);
-  Cube(double origin_x, double origin_y, double origin_z, double size_x,
-       double size_y, double size_z);
+  Cube(float origin_x, float origin_y, float origin_z);
+  Cube(float origin_x, float origin_y, float origin_z, unsigned char colors);
   ~Cube();
 
   virtual void draw();
-  virtual void set_size(double size);
 };
 
 #endif // ifndef CUBE_HPP

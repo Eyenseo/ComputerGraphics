@@ -4,20 +4,18 @@
 #include "drawable.hpp"
 
 class Sphere : public Drawable {
-protected:
-
-  virtual void set_size(double x, double y, double z);
+  static const GLVector<XYZW> XVec;
+  static const GLVector<XYZW> YVec;
+  static const GLVector<XYZW> ZVec;
 
 public:
 
   Sphere();
-  Sphere(double origin_x, double origin_y, double origin_z, double size);
-  Sphere(double origin_x, double origin_y, double origin_z, double size_x,
-         double size_y, double size_z);
+  Sphere(float origin_x, float origin_y, float origin_z);
+  Sphere(float origin_x, float origin_y, float origin_z, unsigned char colors);
   ~Sphere();
 
   virtual void draw();
-  virtual void set_size(double radius);
 };
 
 #endif // ifndef SPHERE_HPP

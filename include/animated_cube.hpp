@@ -23,20 +23,15 @@ class AnimatedCube : public Cube {
 
   void calculate_current_angle();
 
-protected:
-
-  virtual void set_size(double x, double y, double z);
-
 public:
 
   AnimatedCube();
-  AnimatedCube(double origin_x, double origin_y, double origin_z, double size);
-  AnimatedCube(double origin_x, double origin_y, double origin_z, double size_x,
-               double size_y, double size_z);
+  AnimatedCube(float origin_x, float origin_y, float origin_z);
+  AnimatedCube(float origin_x, float origin_y, float origin_z,
+               unsigned char colors);
   ~AnimatedCube();
 
   virtual void draw();
-  virtual void set_size(double size);
 
   void         open();
   void         close();

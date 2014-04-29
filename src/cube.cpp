@@ -5,10 +5,11 @@
 Cube::Cube()
   : Drawable() {}
 
-Cube::Cube(float origin_x, float origin_y, float origin_z)
+Cube::Cube(double origin_x, double origin_y, double origin_z)
   : Drawable(origin_x, origin_y, origin_z) {}
 
-Cube::Cube(float origin_x, float origin_y, float origin_z, unsigned char colors)
+Cube::Cube(double origin_x, double origin_y, double origin_z,
+           unsigned char colors)
   : Drawable(origin_x, origin_y, origin_z, colors)  {}
 
 Cube::~Cube() {}
@@ -26,11 +27,11 @@ void Cube::draw() {
 
         glBegin(GL_QUADS);
         normal.Normalize();
-        glNormal3fv(normal);
-        glVertex3fv(v1);
-        glVertex3fv(v2);
-        glVertex3fv(v3);
-        glVertex3fv(v4);
+        glNormal3dv(normal);
+        glVertex3dv(v1);
+        glVertex3dv(v2);
+        glVertex3dv(v3);
+        glVertex3dv(v4);
         glEnd();
       };
 
@@ -44,7 +45,8 @@ void Cube::draw() {
               origin_[0], origin_[1], origin_[2]);
   glScalef(scale_[0], scale_[1], scale_[2]);
 
-  glGetFloatv(GL_MODELVIEW_MATRIX, model_view);
+  glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
+
   // auto mat_out = [&]() -> std::string {
   // std::ostringstream ss;
 

@@ -15,22 +15,22 @@ enum GLVectorType {
 
 template<GLVectorType T>class GLVector {
   const GLVectorType type_;
-  GLfloat* vec_;
+  GLdouble* vec_;
 
 public:
 
   GLVector()
     : type_(T),
-    vec_(new GLfloat[type_]) {
+    vec_(new GLdouble[type_]) {
     for(int i = 0; i < type_; i++) {
       vec_[i] = 0;
     }
   }
 
-  explicit GLVector(const float* copy)
+  explicit GLVector(const double* copy)
     : type_(T),
-    vec_(new GLfloat[type_]) {
-    assert(sizeof *copy / sizeof(GLfloat) == type_);
+    vec_(new GLdouble[type_]) {
+    assert(sizeof *copy / sizeof(GLdouble) == type_);
 
     for(int i = 0; i < type_; i++) {
       vec_[i] = copy[i];
@@ -39,7 +39,7 @@ public:
 
   GLVector(const GLVector& rhs)
     : type_(T),
-    vec_(new GLfloat[type_]) {
+    vec_(new GLdouble[type_]) {
     for(int i = 0; i < type_; i++) {
       vec_[i] = rhs.vec_[i];
     }
@@ -47,9 +47,9 @@ public:
 
   template<GLVectorType U = T, typename
              = typename std::enable_if<U == XYZ>::type>
-  GLVector(float x, float y, float z)
+  GLVector(double x, double y, double z)
     : type_(T),
-    vec_(new GLfloat[type_]) {
+    vec_(new GLdouble[type_]) {
     vec_[0] = x;
     vec_[1] = y;
     vec_[2] = z;
@@ -57,9 +57,9 @@ public:
 
   template<GLVectorType U = T, typename
              = typename std::enable_if<U == XYZW>::type>
-  GLVector(float x, float y, float z, float w)
+  GLVector(double x, double y, double z, double w)
     : type_(T),
-    vec_(new GLfloat[type_]) {
+    vec_(new GLdouble[type_]) {
     vec_[0] = x;
     vec_[1] = y;
     vec_[2] = z;
@@ -106,28 +106,33 @@ public:
 
   void   MinMaxExpand(GLVector& min, GLVector& max) const {
     for(int i = 0; i < type_; i++) {
-      if(vec_[i] < min.vec_[i]) min.vec_[i] = vec_[i];
-      if(vec_[i] > max.vec_[i]) max.vec_[i] = vec_[i];
+      if(vec_[i] < min.vec_[i]) {
+        min.vec_[i] = vec_[i];
+      }
+      if(vec_[i] > max.vec_[i]) {
+        max.vec_[i] = vec_[i];
+      }
     }
   }
 
   void   Normalize() {
     double l = 1.0 / Length();
 
-    for(int i = 0; i < type_; i++)
+    for(int i = 0; i < type_; i++) {
       vec_[i] *= l;
+    }
   }
 
-  const GLfloat* get_vector() const {
+  const GLdouble* get_vector() const {
     return vec_;
   }
 
-  GLfloat& operator[](const unsigned int index) {
+  GLdouble& operator[](const unsigned int index) {
     assert(index < type_);
     return vec_[index];
   }
 
-  const GLfloat& operator[](const unsigned int index) const {
+  const GLdouble& operator[](const unsigned int index) const {
     assert(index < type_);
     return vec_[index];
   }
@@ -139,18 +144,18 @@ public:
     return *this;
   }
 
-  GLVector& operator+=(const float rhs) {
+  GLVector& operator+=(const double rhs) {
     for(int i = 0; i < type_; i++) {
       vec_[i] += rhs;
     }
     return *this;
   }
 
-  inline friend GLVector operator+(GLVector lhs, const float rhs) {
+  inline friend GLVector operator+(GLVector lhs, const double rhs) {
     return lhs += rhs;
   }
 
-  inline friend GLVector operator+(float rhs, GLVector lhs) {
+  inline friend GLVector operator+(double rhs, GLVector lhs) {
     return lhs += rhs;
   }
 
@@ -165,18 +170,18 @@ public:
     return lhs += rhs;
   }
 
-  GLVector& operator-=(const float rhs) {
+  GLVector& operator-=(const double rhs) {
     for(int i = 0; i < type_; i++) {
       vec_[i] -= rhs;
     }
     return *this;
   }
 
-  inline friend GLVector operator-(GLVector lhs, const float rhs) {
+  inline friend GLVector operator-(GLVector lhs, const double rhs) {
     return lhs -= rhs;
   }
 
-  inline friend GLVector operator-(float rhs, GLVector lhs) {
+  inline friend GLVector operator-(double rhs, GLVector lhs) {
     return lhs -= rhs;
   }
 
@@ -200,52 +205,51 @@ public:
     return c;
   }
 
-  GLVector& operator*=(float sc) {
+  GLVector& operator*=(double sc) {
     for(int i = 0; i < type_; i++) {
       vec_[i] *= sc;
     }
     return *this;
   }
 
-  inline friend GLVector operator*(float sc, GLVector lhs) {
+  inline friend GLVector operator*(double sc, GLVector lhs) {
     return lhs *= sc;
   }
 
-  inline friend GLVector operator*(GLVector lhs, float sc) {
+  inline friend GLVector operator*(GLVector lhs, double sc) {
     return lhs *= sc;
   }
 
   template<GLVectorType U = T, typename
              = typename std::enable_if<U == XYZW>::type>
   friend GLVector operator*(const GLMatrix& lhs, const GLVector& rhs) {
-    // The SFINAE only allows XYZW
     GLVector res;
 
-    for(unsigned char i = 0; i < lhs.ROW_LENGTH; ++i) {
-      for(unsigned char j = 0; j < lhs.COL_LENGTH; ++j) {
-        res.vec_[i] += lhs.get_data(i, j) * rhs.vec_[j];
+    for(unsigned char i = 0; i < 4; ++i) {
+      for(unsigned char j = 0; j < 4; ++j) {
+        res.vec_[i] += lhs.get_data(j, i) * rhs.vec_[j];
       }
     }
 
     return res;
   }
 
-  GLVector& operator/=(float sc) {
+  GLVector& operator/=(double sc) {
     for(int i = 0; i < type_; i++) {
       vec_[i] /= sc;
     }
     return *this;
   }
 
-  inline friend GLVector operator/(GLVector lhs, float sc) {
+  inline friend GLVector operator/(GLVector lhs, double sc) {
     return lhs /= sc;
   }
 
-  inline friend GLVector operator/(float sc, GLVector lhs) {
+  inline friend GLVector operator/(double sc, GLVector lhs) {
     return lhs /= sc;
   }
 
-  operator const GLfloat*() const {
+  operator const GLdouble*() const {
     return vec_;
   }
 
@@ -256,7 +260,7 @@ public:
   }
 
   // dot product ////////////////////////////////////////////////
-  float operator*=(const GLVector& rhs) {
+  double operator*=(const GLVector& rhs) {
     double r = 0;
 
     for(int i = 0; i < type_; i++) {
@@ -265,7 +269,7 @@ public:
     return r;
   }
 
-  inline friend float operator*(GLVector lhs, const GLVector& rhs) {
+  inline friend double operator*(GLVector lhs, const GLVector& rhs) {
     return lhs *= rhs;
   }
 

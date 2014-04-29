@@ -10,7 +10,7 @@ AnimatedCube::AnimatedCube()
   current_angle_(0),
   animation_time_(0) {}
 
-AnimatedCube::AnimatedCube(float origin_x, float origin_y, float origin_z)
+AnimatedCube::AnimatedCube(double origin_x, double origin_y, double origin_z)
   : Cube(origin_x, origin_y, origin_z),
   state_(CLOSED),
   open_angel_(120),
@@ -18,7 +18,7 @@ AnimatedCube::AnimatedCube(float origin_x, float origin_y, float origin_z)
   current_angle_(0),
   animation_time_(0) {}
 
-AnimatedCube::AnimatedCube(float origin_x, float origin_y, float origin_z,
+AnimatedCube::AnimatedCube(double origin_x, double origin_y, double origin_z,
                            unsigned char colors)
   : Cube(origin_x, origin_y, origin_z, colors),
   state_(CLOSED),
@@ -30,13 +30,13 @@ AnimatedCube::AnimatedCube(float origin_x, float origin_y, float origin_z,
 AnimatedCube::~AnimatedCube() {}
 
 /**
-* Calculates the new angel of the lid of the box
-*/
+ * Calculates the new angel of the lid of the box
+ */
 void AnimatedCube::calculate_current_angle() {
   if(((state_ == OPENING) && (state_ != OPEN))
      || ((state_ == CLOSING) && (state_ != CLOSED))) {
-    std::function<float()> fun // logistic function for the opening and closing of the lid
-      = [&]() -> float {
+    std::function<double()> fun // logistic function for the opening and closing of the lid
+      = [&]() -> double {
           return open_angel_
                  * 1 / (1
                         + pow(M_E, -0.0011 * open_angel_ * animation_time_)
@@ -75,11 +75,11 @@ void AnimatedCube::draw() {
         GLVector<XYZ> normal = (v2 - v1) % (v3 - v1);
 
         glBegin(GL_QUADS);
-        glNormal3fv(normal);
-        glVertex3fv(v1);
-        glVertex3fv(v2);
-        glVertex3fv(v3);
-        glVertex3fv(v4);
+        glNormal3dv(normal);
+        glVertex3dv(v1);
+        glVertex3dv(v2);
+        glVertex3dv(v3);
+        glVertex3dv(v4);
         glEnd();
       };
 

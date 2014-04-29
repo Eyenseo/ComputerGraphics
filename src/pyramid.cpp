@@ -3,10 +3,10 @@
 Pyramid::Pyramid()
   : Drawable() {}
 
-Pyramid::Pyramid(float origin_x, float origin_y, float origin_z)
+Pyramid::Pyramid(double origin_x, double origin_y, double origin_z)
   : Drawable(origin_x, origin_y, origin_z) {}
 
-Pyramid::Pyramid(float origin_x, float origin_y, float origin_z,
+Pyramid::Pyramid(double origin_x, double origin_y, double origin_z,
                  unsigned char colors)
   : Drawable(origin_x, origin_y, origin_z, colors)  {}
 
@@ -26,10 +26,10 @@ void Pyramid::draw() {
 
         normal.Normalize();
 
-        glNormal3fv(normal.get_vector());
-        glVertex3fv(v1.get_vector());
-        glVertex3fv(v2.get_vector());
-        glVertex3fv(v3.get_vector());
+        glNormal3dv(normal.get_vector());
+        glVertex3dv(v1.get_vector());
+        glVertex3dv(v2.get_vector());
+        glVertex3dv(v3.get_vector());
       };
 
   set_material_color(1, 0);
@@ -41,15 +41,20 @@ void Pyramid::draw() {
   glScalef(scale_[0], scale_[1], scale_[2]);
 
   glBegin(GL_TRIANGLES);
+
   // Base !!Counter clockwise from below!!
   face(base_top_right, base_bottom_right, base_bottom_left);
   face(base_bottom_left,   base_top_left, base_top_right);
+
   // First Side
   face(base_bottom_right,            top, base_bottom_left);
+
   // Second Side
   face(base_bottom_left,             top, base_top_left);
+
   // Third Side
   face(base_top_left,                top, base_top_right);
+
   // Fourth Side
   face(base_top_right,               top, base_bottom_right);
   glEnd();

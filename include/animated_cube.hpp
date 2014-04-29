@@ -16,18 +16,18 @@ class AnimatedCube : public Cube {
 
   State state_;
 
-  float open_angel_;
-  float closed_angel_;
-  float current_angle_;
-  float animation_time_;
+  double open_angel_;
+  double closed_angel_;
+  double current_angle_;
+  double animation_time_;
 
   void calculate_current_angle();
 
 public:
 
   AnimatedCube();
-  AnimatedCube(float origin_x, float origin_y, float origin_z);
-  AnimatedCube(float origin_x, float origin_y, float origin_z,
+  AnimatedCube(double origin_x, double origin_y, double origin_z);
+  AnimatedCube(double origin_x, double origin_y, double origin_z,
                unsigned char colors);
   ~AnimatedCube();
 

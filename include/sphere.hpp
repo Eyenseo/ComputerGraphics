@@ -10,9 +10,14 @@ class Sphere : public Drawable {
 
 public:
 
+  double fraction_ = 0.005;
+  GLVector<XYZW>  speed;
+  GLVector<XYZW>& origin_ = Drawable::origin_;
+
   Sphere();
-  Sphere(float origin_x, float origin_y, float origin_z);
-  Sphere(float origin_x, float origin_y, float origin_z, unsigned char colors);
+  Sphere(double origin_x, double origin_y, double origin_z);
+  Sphere(double origin_x, double origin_y, double origin_z,
+         unsigned char colors);
   ~Sphere();
 
   virtual void draw();

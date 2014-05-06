@@ -9,7 +9,6 @@
 
 #include "include/animated_cube.hpp"
 #include "include/cube.hpp"
-#include "include/hitable.hpp"
 #include "include/pyramid.hpp"
 #include "include/sphere.hpp"
 #include "include/table.hpp"

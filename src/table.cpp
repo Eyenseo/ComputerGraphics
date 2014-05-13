@@ -3,14 +3,14 @@
 Table::Table()
   : Drawable() {}
 
-Table::Table(float origin_x, float origin_y, float origin_z)
+Table::Table(double origin_x, double origin_y, double origin_z)
   : Drawable(origin_x, origin_y, origin_z, 3) {
   set_color(32, 80, 22, 0);
   set_color(40, 20, 11, 1);
   set_color( 7,  9, 24, 2);
 }
 
-Table::Table(float origin_x, float origin_y, float origin_z,
+Table::Table(double origin_x, double origin_y, double origin_z,
              unsigned char colors)
   : Drawable(origin_x, origin_y, origin_z, colors)  {}
 
@@ -43,11 +43,11 @@ void Table::face(const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
   // glBegin(GL_LINE_STRIP);
   glBegin(GL_QUADS);
   normal.Normalize();
-  glNormal3fv(normal);
-  glVertex3fv(v1);
-  glVertex3fv(v2);
-  glVertex3fv(v3);
-  glVertex3fv(v4);
+  glNormal3dv(normal);
+  glVertex3dv(v1);
+  glVertex3dv(v2);
+  glVertex3dv(v3);
+  glVertex3dv(v4);
   glEnd();
 }
 

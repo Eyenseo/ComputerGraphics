@@ -1,4 +1,5 @@
 #include <GLFW/glfw3.h>
+#include <forward_list>
 #include <functional>
 #include <iostream>
 #include <math.h>
@@ -9,13 +10,15 @@
 
 #include "include/animated_cube.hpp"
 #include "include/cube.hpp"
-#include "include/hitable.hpp"
 #include "include/pyramid.hpp"
 #include "include/sphere.hpp"
 #include "include/table.hpp"
 
-static std::vector<std::function<void(int, int)> > key_callbacks_;
-static std::vector<Drawable*> objects_;
+#include "include/physic.hpp"
+
+static std::forward_list < std::function < void(int, int) >> key_callbacks_;
+static std::forward_list<Drawable*> objects_;
+static std::forward_list<Hitable*>  hitables_;
 
 static double window_width_  = 1024;
 static double window_height_ = 768;
@@ -34,16 +37,20 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-static Table* table;
+static double mouse_divider_ = 2;
+static bool   speed_button_pressed_ = false;
+
+static Table*  table;
+static Sphere* interactive;
 
 /**
-* Function taken from http://r3dux.org/2012/07/a-simple-glfw-fps-counter/
-*
-* @param  time_interval time interval for fps check
-* @param  window       pointer to window to receive the FPS in the title
-* @param  window_title  Window title before FPS
-* @return              FPS as double
-*/
+ * Function taken from http://r3dux.org/2012/07/a-simple-glfw-fps-counter/
+ *
+ * @param  time_interval time interval for fps check
+ * @param  window       pointer to window to receive the FPS in the title
+ * @param  window_title  Window title before FPS
+ * @return              FPS as double
+ */
 double calcFPS(double time_interval = 1.0, GLFWwindow* window = NULL, std::string window_title
                  = "") {
   // Static values which only get initialised the first time the function runs
@@ -96,53 +103,54 @@ double calcFPS(double time_interval = 1.0, GLFWwindow* window = NULL, std::strin
 }
 
 /**
-* The function will add / decrease the global zoom / the distance to 0,0,0
-*
-* @param window   Will hold The window that received the event
-* @param x_offset x offset of the mouse wheel - either +1 or -1
-* @param y_offset y offset of the mouse wheel - either +1 or -1
-*/
+ * The function will add / decrease the global zoom / the distance to 0,0,0
+ *
+ * @param window   Will hold The window that received the event
+ * @param x_offset x offset of the mouse wheel - either +1 or -1
+ * @param y_offset y offset of the mouse wheel - either +1 or -1
+ */
 void mouse_scroll_callback(GLFWwindow* window, double x_offset,
                            double y_offset) {
   global_z_translation_ += y_offset / 4.0;
 }
 
 /**
-* The function will go through a vector with funtions and pass them as
-* parameter int key and int action.
-*
-* @param window   Will hold the window that received the event
-* @param key      Will hold the number of the key that triggered the event
-* @param scancode Will hold the system-specific scancode of the key.
-* @param action   Will hold the action that occurred - GLFW_PRESS, GLFW_RELEASE
-*                 or GLFW_REPEAT
-* @param mods     Will hold Bit field that describes which modifier keys were
-*                 held down.
-*/
+ * The function will go through a vector with funtions and pass them as
+ * parameter int key and int action.
+ *
+ * @param window   Will hold the window that received the event
+ * @param key      Will hold the number of the key that triggered the event
+ * @param scancode Will hold the system-specific scancode of the key.
+ * @param action   Will hold the action that occurred - GLFW_PRESS, GLFW_RELEASE
+ *                 or GLFW_REPEAT
+ * @param mods     Will hold Bit field that describes which modifier keys were
+ *                 held down.
+ */
 void key_callback(GLFWwindow* window, int key, int scancode, int action,
                   int mods) {
   // std::cout << key << std::endl;
 
-  for(std::vector<std::function<void(int, int)> >::iterator i
-        = key_callbacks_.begin(); i != key_callbacks_.end(); ++i) {
-    (*i)(key, action);
+  for(auto fun : key_callbacks_) {
+    fun(key, action);
   }
 }
 
 /**
-* The function will change the global rotation if the CTRL-Key and the left
-* mouse button is pressed and translation if only the left mouse button is
-* pressed.
-*
-* @param window Will hold the window that received the event
-* @param x_pos  Will hold the new x-coordinate, in screen coordinates,
-*               of the cursor.
-* @param y_pos  Will hold the new y-coordinate, in screen coordinates,
-*               of the cursor.
-*/
+ * The function will change the global rotation if the CTRL-Key and the left
+ * mouse button is pressed and translation if only the left mouse button is
+ * pressed.
+ *
+ * @param window Will hold the window that received the event
+ * @param x_pos  Will hold the new x-coordinate, in screen coordinates,
+ *               of the cursor.
+ * @param y_pos  Will hold the new y-coordinate, in screen coordinates,
+ *               of the cursor.
+ */
 void mouse_position_callback(GLFWwindow* window, double x_pos, double y_pos) {
   if(glfwGetMouseButton(window, 0) == GLFW_PRESS) {
-    if(glfwGetKey(window, 341) == GLFW_PRESS) { // CTRL/STRG
+    if(glfwGetKey(window, 341) == GLFW_PRESS) {
+      speed_button_pressed_ = true;
+    } else if(glfwGetKey(window, 340) == GLFW_PRESS) { // CTRL/STRG
       global_x_rotation_ = global_x_rotation_
                            + (y_pos - mouse_down_y_) / 8;
       global_z_rotation_ = global_z_rotation_
@@ -159,16 +167,16 @@ void mouse_position_callback(GLFWwindow* window, double x_pos, double y_pos) {
 }
 
 /**
-* The function will capture the position where the left mouse button went down
-* and will update the previous values of the global rotation and translation if
-* the left mouse button is released
-*
-* @param window Will hold the window that received the event
-* @param button Will hold the mouse button that was pressed or released.
-* @param action Will hold one of GLFW_PRESS or GLFW_RELEASE.
-* @param mods   Will hold Bit field that describes which modifier keys were
-*               held down.
-*/
+ * The function will capture the position where the left mouse button went down
+ * and will update the previous values of the global rotation and translation if
+ * the left mouse button is released
+ *
+ * @param window Will hold the window that received the event
+ * @param button Will hold the mouse button that was pressed or released.
+ * @param action Will hold one of GLFW_PRESS or GLFW_RELEASE.
+ * @param mods   Will hold Bit field that describes which modifier keys were
+ *               held down.
+ */
 void mouse_button_callback(GLFWwindow* window, int button, int action,
                            int mods) {
   if(button == 0) {
@@ -179,6 +187,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
 
       mouse_down_x_ = x_pos;
       mouse_down_y_ = y_pos;
+
+      // std::cout << "X: "<< x_pos << " Y: " << y_pos << std::endl;
     } else {
       global_x_translation_prev_ = global_x_translation_;
       global_y_translation_prev_ = global_y_translation_;
@@ -188,13 +198,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
 }
 
 /**
-* The function will initialise GLFW.
-*
-* @param  window Reference Pointer to a variable for the created window
-* @return        May return an error code 0 for success negative for failure
-*/
+ * The function will initialise GLFW.
+ *
+ * @param  window Reference Pointer to a variable for the created window
+ * @return        May return an error code 0 for success negative for failure
+ */
 int init_glfw(GLFWwindow*& window) {
-  if(!glfwInit()) return -1;
+  if(!glfwInit()) {
+    return -1;
+  }
 
   // Antialiasing
   glfwWindowHint(GLFW_SAMPLES, 4);
@@ -216,13 +228,13 @@ int init_glfw(GLFWwindow*& window) {
   // TODO clean up - make a system that will make all callbacks on initialisation
 
   /*
-  * The function will update the previous values of the global rotation if the
-  * CTRL-key is no longer pressed and the mouse position to prevent jumping.
-  * If the CTRL-KEy is pressed it will update the translation values.
-  */
-  key_callbacks_.push_back(
+   * The function will update the previous values of the global rotation if the
+   * CTRL-key is no longer pressed and the mouse position to prevent jumping.
+   * If the CTRL-KEy is pressed it will update the translation values.
+   */
+  key_callbacks_.push_front(
     [window](int event, int action) {
-      if(event == 341) {
+      if(event == 340) {
         double x_pos, y_pos;
         glfwGetCursorPos(window, &x_pos, &y_pos);
 
@@ -242,9 +254,9 @@ int init_glfw(GLFWwindow*& window) {
 }
 
 /**
-* The function will initialise the view of the scene / clear the frame to be
-* rendered again. This includes to apply the global transformations
-*/
+ * The function will initialise the view of the scene / clear the frame to be
+ * rendered again. This includes to apply the global transformations
+ */
 void init_view() {
   glClearColor(0.8, 0.8, 0.8, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -252,6 +264,7 @@ void init_view() {
   // Reset view
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
+
   // glOrtho(-15, 15, -10, 10, -20, 20);
   glFrustum(-.5, .5, -.5, .5, 1, 200);
 
@@ -260,9 +273,11 @@ void init_view() {
   glLoadIdentity();
 
   glPushMatrix();
+
   // Apply gobal movement
   glTranslated(global_x_translation_, global_y_translation_,
                global_z_translation_);
+
   // Apply global rotation
   glRotated(global_x_rotation_, 1, 0, 0);
   glRotated(global_y_rotation_, 0, 1, 0);
@@ -270,10 +285,10 @@ void init_view() {
 }
 
 /**
-* The function will initialise the lighting
-*/
+ * The function will initialise the lighting
+ */
 void init_lighting() {
-  GLfloat ambient[]     = {1.75, 1.75, 1.75, 1};
+  GLfloat ambient[]     = {2.75, 2.75, 2.75, 1};
   GLfloat white_color[] = {1.5, 1.5, 1.5, 1};
 
   GLfloat pos_1[] = {15, 15, 13, 1};
@@ -299,88 +314,245 @@ void init_lighting() {
 }
 
 /**
-* The function will create all objects to be rendered
-*/
+ * The function will create all objects to be rendered
+ */
 void make_objects() {
   Drawable* temp;
 
-  temp = new Sphere(0, 0, 6);
-  key_callbacks_.push_back(
+  double dif = -4;
+
+  temp = new Sphere(dif, dif, 5.6);
+  interactive = dynamic_cast<Sphere*>(temp);
+  temp->set_color(.7, .7, .7, 0);
+  key_callbacks_.push_front(
     [temp](int event, int) {
       if((GLFW_KEY_W == event)) {
         temp->set_origin_y(temp->get_origin_y() + .05);
       }
     });
-  key_callbacks_.push_back(
+  key_callbacks_.push_front(
     [temp](int event, int) {
       if((GLFW_KEY_A == event)) {
         temp->set_origin_x(temp->get_origin_x() - .05);
       }
     });
-  key_callbacks_.push_back(
+  key_callbacks_.push_front(
     [temp](int event, int) {
       if((GLFW_KEY_S == event)) {
         temp->set_origin_y(temp->get_origin_y() - .05);
       }
     });
-  key_callbacks_.push_back(
+  key_callbacks_.push_front(
     [temp](int event, int) {
       if((GLFW_KEY_D == event)) {
         temp->set_origin_x(temp->get_origin_x() + .05);
       }
     });
-  key_callbacks_.push_back(
+  key_callbacks_.push_front(
     [temp](int event, int) {
       if((GLFW_KEY_Q == event)) {
         temp->set_origin_z(temp->get_origin_z() + .05);
       }
     });
-  key_callbacks_.push_back(
+  key_callbacks_.push_front(
     [temp](int event, int) {
       if((GLFW_KEY_E == event)) {
         temp->set_origin_z(temp->get_origin_z() - .05);
       }
     });
-  objects_.push_back(temp);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
 
-  temp = new Table(0, 0, 0);
-  table = (Table*) temp;
+  dif += 1.1;
+  temp = new Sphere(dif, dif, 5.6);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
+
+  dif += 1.1;
+  temp = new Sphere(dif, dif, 5.6);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
+
+  dif += 1.1;
+  temp = new Sphere(dif, dif, 5.6);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
+
+  dif += 1.1;
+  temp = new Sphere(dif, dif, 5.6);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
+
+  dif += 1.1;
+  temp = new Sphere(dif, dif, 5.6);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
+
+  dif += 1.1;
+  temp = new Sphere(dif, dif, 5.6);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
+
+  dif += 1.1;
+  temp = new Sphere(dif, dif, 5.6);
+  objects_.push_front(temp);
+  hitables_.push_front((Sphere*)temp);
+
+  temp  = new Table(0, 0, 0);
+  table = (Table*)temp;
   temp->set_color(15, 36, 117, 0);
-  objects_.push_back(temp);
+  objects_.push_front(temp);
 
   // temp = new AnimatedCube(0, 0, 0, 2);
   // temp->set_color(0, 0, 1, 0);
   // temp->set_color(1, 0, 0, 1);
-  // key_callbacks_.push_back(
+  // key_callbacks_.push_front(
   // [temp](int event, int action) {
   // if((GLFW_KEY_O == event) && (action == 1))
   // ((AnimatedCube*)temp)->open();
   // });
-  // key_callbacks_.push_back(
+  // key_callbacks_.push_front(
   // [temp](int event, int action) {
   // if((GLFW_KEY_C == event) && (action == 1))
   // ((AnimatedCube*)temp)->close();
   // });
-  // key_callbacks_.push_back(
+  // key_callbacks_.push_front(
   // [temp](int event, int action) {
   // if((93 == event) && (action == 1)) // 93 = +
   // temp->set_scale(temp->get_scale() + .5);
   // });
-  // key_callbacks_.push_back(
+  // key_callbacks_.push_front(
   // [temp](int event, int action) {
   // if((47 == event) && (action == 1)) // 47 = -
   // temp->set_scale(temp->get_scale() - .5);
   // });
-  // objects_.push_back(temp);
+  // objects_.push_front(temp);
 }
 
 /**
-* The function will call the draw method from all drawable objects
-*/
+ * The function will call the draw method from all drawable objects
+ */
 void draw() {
-  for(std::vector<Drawable*>::iterator i = objects_.begin();
-      i != objects_.end(); ++i) {
-    (*i)->draw();
+  for(auto drawable: objects_) {
+    drawable->draw();
+  }
+}
+
+GLVector<XYZW>mouse_pos_to_world(const GLMatrix& modelXprojectionINV,
+                                 GLint* viewport, GLVector<XYZW>pos) {
+  pos[1] = viewport[3] - pos[1];
+
+  // Transformation of normalized coordinates between -1 and 1
+  pos[0] = ((pos[0] - viewport[0]) / viewport[2]) * 2.0 - 1.0;
+  pos[1] = ((pos[1] - viewport[1]) / viewport[3]) * 2.0 - 1.0;
+  pos[2] = pos[2] * 2.0 - 1.0;
+  pos[3] = 1.0;
+
+  // Objects coordinates
+
+  GLVector<XYZW> res = modelXprojectionINV * pos;
+
+  assert(res[3] != 0.0);
+
+  res[0] /= res[3];
+  res[1] /= res[3];
+  res[2] /= res[3];
+  return res;
+}
+
+void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
+                const GLVector<XYZW>& b) {
+  if(speed_button_pressed_ && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
+    auto setMaterialColor
+      = [](const double(&color_)[3], int side = 0) {
+          float amb[4], dif[4], spe[4];
+          int   mat;
+
+          dif[0] = color_[0];
+          dif[1] = color_[1];
+          dif[2] = color_[2];
+
+          for(int i = 0; i < 3; i++) {
+            amb[i] = .1 * dif[i];
+            spe[i] = .5;
+          }
+          amb[3] = dif[3] = spe[3] = 1.0;
+
+          switch(side) {
+            case 1:
+              mat = GL_FRONT;
+              break;
+            case 2:
+              mat = GL_BACK;
+              break;
+            default:
+              mat = GL_FRONT_AND_BACK;
+          }
+
+          glMaterialfv(mat, GL_AMBIENT,  amb);
+          glMaterialfv(mat, GL_DIFFUSE,  dif);
+          glMaterialfv(mat, GL_SPECULAR, spe);
+          glMaterialf(mat, GL_SHININESS, 20);
+        };
+
+    setMaterialColor({1, 0, 0});
+    glLineWidth(4);
+    glBegin(GL_LINES);
+    glVertex3dv(a);
+    glVertex3dv(b);
+    glEnd();
+    glLineWidth(1);
+  }
+}
+
+void mouse_interaction(GLFWwindow* window) {
+  if(speed_button_pressed_) {
+    // Retrieve model view matrix
+    GLMatrix model;
+    glGetDoublev(GL_MODELVIEW_MATRIX, model);
+
+    // Retrieve projection matrix
+    GLMatrix projection;
+    glGetDoublev(GL_PROJECTION_MATRIX, projection);
+
+    GLMatrix mp = model * projection;
+
+    if(mp.inverse()) {
+      // Retrieve current cursor position
+      double x_pos, y_pos;
+      glfwGetCursorPos(window, &x_pos, &y_pos);
+
+      // Build vector of old cursor position
+      GLVector<XYZW> mouse_press;
+      mouse_press[0] = mouse_down_x_;
+      mouse_press[1] = mouse_down_y_;
+      mouse_press[2] = 0;
+
+      // Build vector of current cursor position
+      GLVector<XYZW> mouse_current;
+      mouse_current[0] = x_pos;
+      mouse_current[1] = y_pos;
+      mouse_current[2] = 0;
+
+      // Retrieve viewport matrix
+      GLint viewport[4];
+      glGetIntegerv(GL_VIEWPORT, viewport);
+
+      mouse_press   = mouse_pos_to_world(mp, viewport, mouse_press);
+      mouse_current = mouse_pos_to_world(mp, viewport, mouse_current);
+
+      debug_line(window, mouse_press, mouse_current);
+
+      if(speed_button_pressed_ && glfwGetMouseButton(window, 0) != GLFW_PRESS) {
+        speed_button_pressed_ = false;
+
+        GLVector<XYZW> direction_speed = (mouse_press - mouse_current)
+                                         / mouse_divider_;
+        direction_speed[2] = 0;
+
+        interactive->add_speed(direction_speed / mouse_divider_);
+      }
+    }
   }
 }
 
@@ -394,19 +566,29 @@ int main() {
     return error;
   }
 
+  key_callbacks_.push_front(
+    [window](int event, int) {
+      if((GLFW_KEY_ESCAPE == event)) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+      }
+    });
+
   make_objects();
+  Physic phy;
 
   while(!glfwWindowShouldClose(window)) {
     init_view();
     init_lighting();
-
     draw();
+
     glPopMatrix();
+
+    mouse_interaction(window);
+    phy.collision(hitables_);
 
     calcFPS(1, window, "Simple 3D Animation");
 
     glfwSwapBuffers(window);
-
     glfwPollEvents();
   }
 

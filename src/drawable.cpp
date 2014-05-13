@@ -7,20 +7,20 @@
 Drawable::Drawable()
   : origin_(0, 0, 0, 1),
   scale_(1, 1, 1),
-  color_(new float[1 * 3]()),
+  color_(new double[1 * 3]()),
   colors_(1) {}
 
-Drawable::Drawable(float origin_x, float origin_y, float origin_z)
+Drawable::Drawable(double origin_x, double origin_y, double origin_z)
   : origin_(origin_x, origin_y, origin_z, 1),
   scale_(1, 1, 1),
-  color_(new float[1 * 3]()),
+  color_(new double[1 * 3]()),
   colors_(1)  {}
 
-Drawable::Drawable(float origin_x, float origin_y, float origin_z,
+Drawable::Drawable(double origin_x, double origin_y, double origin_z,
                    unsigned char colors)
   : origin_(origin_x, origin_y, origin_z, 1),
   scale_(1, 1, 1),
-  color_(new float[colors * 3]()),
+  color_(new double[colors * 3]()),
   colors_(colors)  {}
 
 Drawable::~Drawable() {
@@ -75,9 +75,9 @@ void Drawable::set_material_color(int side, unsigned char color = 0) const {
  * @param z_distance distance the origin has to move in z direction before
  *                   rotation
  */
-void Drawable::rotate_from(float x_angle, float y_angle, float z_angle,
-                           float x_distance, float y_distance,
-                           float z_distance) const {
+void Drawable::rotate_from(double x_angle, double y_angle, double z_angle,
+                           double x_distance, double y_distance,
+                           double z_distance) const {
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glTranslatef(x_distance, y_distance, z_distance);
@@ -94,31 +94,31 @@ void Drawable::set_origin(const GLVector<XYZW>& origin) {
   origin_ = GLVector<XYZW>(origin);
 }
 
-void Drawable::set_origin(float origin_x, float origin_y, float origin_z) {
+void Drawable::set_origin(double origin_x, double origin_y, double origin_z) {
   origin_ = GLVector<XYZW>(origin_x, origin_y, origin_z, 1);
 }
 
-float Drawable::get_origin_x() const {
+double Drawable::get_origin_x() const {
   return origin_[0];
 }
 
-void Drawable::set_origin_x(float origin_x) {
+void Drawable::set_origin_x(double origin_x) {
   origin_[0] = origin_x;
 }
 
-float Drawable::get_origin_y() const {
+double Drawable::get_origin_y() const {
   return origin_[1];
 }
 
-void Drawable::set_origin_y(float origin_y) {
+void Drawable::set_origin_y(double origin_y) {
   origin_[1] = origin_y;
 }
 
-float Drawable::get_origin_z() const {
+double Drawable::get_origin_z() const {
   return origin_[2];
 }
 
-void Drawable::set_origin_z(float origin_z) {
+void Drawable::set_origin_z(double origin_z) {
   origin_[2] = origin_z;
 }
 
@@ -126,35 +126,36 @@ const GLVector<XYZ>Drawable::get_rotation() const {
   return rotation_;
 }
 
-GLfloat Drawable::get_rotation_x() const {
+GLdouble Drawable::get_rotation_x() const {
   return rotation_[0];
 }
 
-void Drawable::set_rotation_x(float rotation_x) {
+void Drawable::set_rotation_x(double rotation_x) {
   rotation_[0] = rotation_x;
 }
 
-GLfloat Drawable::get_rotation_y() const {
+GLdouble Drawable::get_rotation_y() const {
   return rotation_[1];
 }
 
-void Drawable::set_rotation_y(float rotation_y) {
+void Drawable::set_rotation_y(double rotation_y) {
   rotation_[0] = rotation_y;
 }
 
-GLfloat Drawable::get_rotation_z() const {
+GLdouble Drawable::get_rotation_z() const {
   return rotation_[2];
 }
 
-void Drawable::set_rotation_z(float rotation_z) {
+void Drawable::set_rotation_z(double rotation_z) {
   rotation_[2] = rotation_z;
 }
 
-const float* Drawable::get_color() const {
+const double* Drawable::get_color() const {
   return color_;
 }
 
-void Drawable::set_color(float r, float g, float b, unsigned char color = 0) {
+void Drawable::set_color(double r, double g, double b, unsigned char color
+                           = 0) {
   assert(color < colors_);
 
   int i = color * 3;
@@ -176,11 +177,11 @@ void Drawable::set_color(float r, float g, float b, unsigned char color = 0) {
   }
 }
 
-float Drawable::get_color_red(unsigned char color = 0) const {
+double Drawable::get_color_red(unsigned char color = 0) const {
   return color_[color * 3];
 }
 
-void Drawable::set_color_red(float r, unsigned char color = 0) {
+void Drawable::set_color_red(double r, unsigned char color = 0) {
   assert(color < colors_);
 
   if(r > 1) {
@@ -190,11 +191,11 @@ void Drawable::set_color_red(float r, unsigned char color = 0) {
   }
 }
 
-float Drawable::get_color_green(unsigned char color = 0) const {
+double Drawable::get_color_green(unsigned char color = 0) const {
   return color_[color * 3 + 1];
 }
 
-void Drawable::set_color_green(float g, unsigned char color = 0) {
+void Drawable::set_color_green(double g, unsigned char color = 0) {
   assert(color < colors_);
 
   if(g > 1) {
@@ -204,11 +205,11 @@ void Drawable::set_color_green(float g, unsigned char color = 0) {
   }
 }
 
-float Drawable::get_color_blue(unsigned char color = 0) const {
+double Drawable::get_color_blue(unsigned char color = 0) const {
   return color_[color * 3 + 2];
 }
 
-void Drawable::set_color_blue(float b, unsigned char color = 0) {
+void Drawable::set_color_blue(double b, unsigned char color = 0) {
   assert(color < colors_);
 
   if(b > 1) {
@@ -222,7 +223,7 @@ const GLVector<XYZ>Drawable::get_scale() const {
   return scale_;
 }
 
-void Drawable::set_scale(float scale_x, float scale_y, float scale_z) {
+void Drawable::set_scale(double scale_x, double scale_y, double scale_z) {
   scale_[0] = scale_x;
   scale_[1] = scale_y;
   scale_[2] = scale_z;
@@ -234,32 +235,32 @@ void Drawable::set_scale(const GLVector<XYZ>& scale) {
   scale_[2] = scale[2];
 }
 
-void Drawable::set_scale(float scale) {
+void Drawable::set_scale(double scale) {
   scale_[0] = scale;
   scale_[1] = scale;
   scale_[2] = scale;
 }
 
-float Drawable::get_scale_x() const {
+double Drawable::get_scale_x() const {
   return scale_[0];
 }
 
-void Drawable::set_scale_x(float scale_x) {
+void Drawable::set_scale_x(double scale_x) {
   scale_[0] = scale_x;
 }
 
-float Drawable::get_scale_y() const {
+double Drawable::get_scale_y() const {
   return scale_[1];
 }
 
-void Drawable::set_scale_y(float scale_y) {
+void Drawable::set_scale_y(double scale_y) {
   scale_[1] = scale_y;
 }
 
-float Drawable::get_scale_z() const {
+double Drawable::get_scale_z() const {
   return scale_[2];
 }
 
-void Drawable::set_scale_z(float scale_z) {
+void Drawable::set_scale_z(double scale_z) {
   scale_[2] = scale_z;
 }

@@ -7,8 +7,9 @@ class Pyramid : public Drawable {
 public:
 
   Pyramid();
-  Pyramid(float origin_x, float origin_y, float origin_z);
-  Pyramid(float origin_x, float origin_y, float origin_z, unsigned char colors);
+  Pyramid(double origin_x, double origin_y, double origin_z);
+  Pyramid(double origin_x, double origin_y, double origin_z,
+          unsigned char colors);
   ~Pyramid();
 
   virtual void draw();

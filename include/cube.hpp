@@ -7,8 +7,8 @@ class Cube : public Drawable {
 public:
 
   Cube();
-  Cube(float origin_x, float origin_y, float origin_z);
-  Cube(float origin_x, float origin_y, float origin_z, unsigned char colors);
+  Cube(double origin_x, double origin_y, double origin_z);
+  Cube(double origin_x, double origin_y, double origin_z, unsigned char colors);
   ~Cube();
 
   virtual void draw();

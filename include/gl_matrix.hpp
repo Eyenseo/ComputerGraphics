@@ -25,7 +25,7 @@ public:
 
     for(unsigned char i = 0; i < ROW_LENGTH; ++i) {
       for(unsigned char j = 0; j < COL_LENGTH; ++j) {
-        set_data(i, j, copy.get_data(j, i));
+        set_data(i, j, copy.get_data(i, j));
       }
     }
   }
@@ -278,7 +278,7 @@ public:
     for(unsigned int i = 0; i < 4; i++) {
       for(unsigned int j = 0; j < 4; j++) {
         for(unsigned int k = 0; k < 4; k++) {
-          res += get_data(k, i) * rhs.get_data(k, j);
+          res += get_data(i, k) * rhs.get_data(k, j);
         }
         temp[i + j * 4] = res;
         res = 0.0;
@@ -316,7 +316,7 @@ public:
   GLMatrix operator=(const GLMatrix& copy) {
     for(unsigned char i = 0; i < ROW_LENGTH; ++i) {
       for(unsigned char j = 0; j < COL_LENGTH; ++j) {
-        set_data(i, j, copy.get_data(j, i));
+        set_data(i, j, copy.get_data(i, j));
       }
     }
 

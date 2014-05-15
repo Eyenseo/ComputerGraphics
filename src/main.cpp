@@ -498,8 +498,8 @@ void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
     setMaterialColor({1, 0, 0});
     glLineWidth(4);
     glBegin(GL_LINES);
-    glVertex3dv(a);
-    glVertex3dv(b);
+    glVertex3dv(a - 0.0001);  // -0.001 to prevent clipping with the near plane
+    glVertex3dv(b - 0.0001);  // -0.001 to prevent clipping with the near plane
     glEnd();
     glLineWidth(1);
   }
@@ -515,7 +515,7 @@ void mouse_interaction(GLFWwindow* window) {
     GLMatrix projection;
     glGetDoublev(GL_PROJECTION_MATRIX, projection);
 
-    GLMatrix mp = model * projection;
+    GLMatrix mp = model.transpose() * projection.transpose();
 
     if(mp.inverse()) {
       // Retrieve current cursor position
@@ -580,12 +580,11 @@ int main() {
     init_view();
     init_lighting();
     draw();
+    mouse_interaction(window);
 
     glPopMatrix();
 
-    mouse_interaction(window);
     phy.collision(hitables_);
-
     calcFPS(1, window, "Simple 3D Animation");
 
     glfwSwapBuffers(window);

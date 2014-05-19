@@ -1,21 +1,21 @@
 #include "include/sphere.hpp"
 
-const GLVector<XYZW> Sphere::XVec(1, 0, 0, 1);
-const GLVector<XYZW> Sphere::YVec(0, 1, 0, 1);
-const GLVector<XYZW> Sphere::ZVec(0, 0, 1, 1);
-
 Sphere::Sphere()
   : Drawable(),
   SphereBB(&(Drawable::origin_)) {}
 
 Sphere::Sphere(double origin_x, double origin_y, double origin_z)
   : Drawable(origin_x, origin_y, origin_z, 1),
-  SphereBB(&(Drawable::origin_)) {}
+  SphereBB(&(Drawable::origin_)) {
+  radius_ = 0.5;
+}
 
 Sphere::Sphere(double origin_x, double origin_y, double origin_z,
                unsigned char colors)
   : Drawable(origin_x, origin_y, origin_z, colors),
-  SphereBB(&(Drawable::origin_)) {}
+  SphereBB(&(Drawable::origin_)) {
+  radius_ = 0.5;
+}
 
 Sphere::~Sphere() {}
 
@@ -56,7 +56,7 @@ void Sphere::draw() {
       s2 = sin(a2);
       c2 = cos(a2);
 
-      normal = c1 * XVec + s1 * (c2 * YVec + s2 * ZVec);
+      normal = c1 * GLVector<XYZW>::XVec + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
       v1     = 0.5 * normal;
 
       glNormal3dv(normal);
@@ -67,7 +67,7 @@ void Sphere::draw() {
       s2 = sin(a2 + a2d);
       c2 = cos(a2 + a2d);
 
-      normal = c1 * XVec + s1 * (c2 * YVec + s2 * ZVec);
+      normal = c1 * GLVector<XYZW>::XVec + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
       v1     = 0.5 * normal;
 
       glNormal3dv(normal.get_vector());

@@ -6,13 +6,16 @@
 class SphereBB : public Hitable {
   friend Physic;
 
+
+  SphereBB() {
+  }
+
+protected:
   double radius_;
 
-  SphereBB() {}
-
 public:
-
-  SphereBB(GLVector<XYZW>* origin) : Hitable(origin) {}
+  SphereBB(GLVector<XYZW>* origin) : Hitable(origin) {
+  }
 
   virtual ~SphereBB() {}
 };

@@ -9,11 +9,11 @@ void Physic::collision(std::forward_list<Hitable*>objects) {
 
   for(Inter i = objects.begin(); i != end; ++i) {
     SphereBB* s1 = dynamic_cast<SphereBB*>(*i);
-    OOBB*     o1 = (s1 == nullptr) ? dynamic_cast<OOBB*>(*i) : nullptr;
+    OBB*     o1 = (s1 == nullptr) ? dynamic_cast<OBB*>(*i) : nullptr;
 
     for(Inter j = i; j != end; ++j) {
       SphereBB* s2 = dynamic_cast<SphereBB*>(*j);
-      OOBB*     o2 = (s2 == nullptr) ? dynamic_cast<OOBB*>(*j) : nullptr;
+      OBB*     o2 = (s2 == nullptr) ? dynamic_cast<OBB*>(*j) : nullptr;
 
       if(s1 != nullptr && s2 != nullptr) {
         collision(*s1, *s2);
@@ -30,112 +30,67 @@ void Physic::collision(std::forward_list<Hitable*>objects) {
 
 void Physic::collision(SphereBB& a, SphereBB& b) {
   if(&a != &b) {
-    GLVector<XYZW> vec = *a.origin_ - *b.origin_;
+    const GLVector<XYZW> vec = *a.origin_ - *b.origin_;
     GLVector<XYZW> n   = vec;
     n.Normalize();
 
-    if(vec * n < 1 && vec * n > 0) {
-      GLVector<XYZW> so = a.speed_;
-      GLVector<XYZW> po = b.speed_;
-      double buff1;
-      double buff2;
-
-      buff1     = (so - po) * (*a.origin_ - *b.origin_);
-      buff2     = (*a.origin_ - *b.origin_).Length2();
-      a.speed_ -= (buff1 / buff2) * (*a.origin_ - *b.origin_);
-
-      buff1     = (po - so) * (*b.origin_ - *a.origin_);
-      buff2     = (*b.origin_ - *a.origin_).Length2();
-      b.speed_ -= (buff1 / buff2) * (*b.origin_ - *a.origin_);
+    if(vec * n < 1 && vec * n > 0) {  // TODO replace with real radius
+      const GLVector<XYZW> so = a.speed_;
+      const GLVector<XYZW> po = b.speed_;
+      {
+        const double buff1 = (so - po) * (*a.origin_ - *b.origin_);
+        const double buff2 = (*a.origin_ - *b.origin_).Length2();
+        a.speed_ -= (buff1 / buff2) * (*a.origin_ - *b.origin_);
+      }
+      {
+        const double buff1 = (po - so) * (*b.origin_ - *a.origin_);
+        const double buff2 = (*b.origin_ - *a.origin_).Length2();
+        b.speed_ -= (buff1 / buff2) * (*b.origin_ - *a.origin_);
+      }
     }
   }
 }
 
-void Physic::collision(SphereBB& a, OOBB& b) {
-  // auto fun7 = [&](Sphere& s) {
-  //// table box
-  // struct Face {
-  // GLVector<XYZW> a;
-  // GLVector<XYZW> b;
-  // GLVector<XYZW> c;
-  // GLVector<XYZW> d;
-  // GLVector<XYZW> n;
+GLVector<XYZW> Physic::closest_point_on_OBB(const GLVector<XYZW>& a,
+                                            const OBB& b) {
+  GLVector<XYZW> d = a - *b.origin_;
 
-  // Face(GLVector<XYZW>&& A, GLVector<XYZW>&& B,
-  // GLVector<XYZW>&& C, GLVector<XYZW>&& D)
-  // : a(A), b(B), c(C), d(D) {
-  // GLVector<XYZ> buff = (b - a) % (c - a);
-  // buff.Normalize();
-  // n[0] = buff[0];
-  // n[1] = buff[1];
-  // n[2] = buff[2];
-  // n[3] = 1;
-  // n   *= -1;
-  // }
-  // };
+  GLVector<XYZW> closest = *b.origin_;
 
-  // static Face left
-  // = Face(GLVector<XYZW>(-7, 5, 6,
-  // 1), GLVector<XYZW>(-7, -5, 6, 1),
-  // GLVector<XYZW>(-7, -5, 5,
-  // 1), GLVector<XYZW>(-7, 5, 5, 1));
-  // static Face bottom
-  // = Face(GLVector<XYZW>(-7, -5, 6,
-  // 1), GLVector<XYZW>(7, -5, 6, 1),
-  // GLVector<XYZW>(7, -5, 5,
-  // 1), GLVector<XYZW>(-7, -5, 5, 1));
-  // static Face right
-  // = Face(GLVector<XYZW>(7, -5, 6,
-  // 1), GLVector<XYZW>(7, 5, 6, 1),
-  // GLVector<XYZW>(7, 5, 5,
-  // 1), GLVector<XYZW>(7, -5, 5, 1));
-  // static Face top
-  // = Face(GLVector<XYZW>(7, 5, 6,
-  // 1), GLVector<XYZW>(-7, 5, 6, 1),
-  // GLVector<XYZW>(-7, 5, 5,
-  // 1), GLVector<XYZW>(7, 5, 5, 1));
+  // For each OBB axis...
+  for(int i = 0; i < 3; i++) {
+    double dist = d * b.local_axis_[i];
 
-  //// auto gun = [&](Face& f) {
-  //// fun6({1, 0, 0});
-  //// glLineWidth(4);
-  //// glBegin(GL_LINES);
-  //// glVertex3dv(f.a);
-  //// glVertex3dv(f.b);
-  //// glVertex3dv(f.b);
-  //// glVertex3dv(f.c);
-  //// glVertex3dv(f.c);
-  //// glVertex3dv(f.d);
-  //// glVertex3dv(f.d);
-  //// glVertex3dv(f.a);
-  //// glEnd();
-  //// glLineWidth(1);
-  //// };
-  ////// hitbox
-  //// gun(left);
-  //// gun(bottom);
-  //// gun(right);
-  //// gun(top);
+    if(dist > b.half_length_[i]) {
+      dist = b.half_length_[i];
+    }
+    if(dist < -b.half_length_[i]) {
+      dist = -b.half_length_[i];
+    }
 
-  // auto hun = [&](Face& f) {
-  // GLVector<XYZW> vec = f.a - s.origin_;
+    closest += dist * b.local_axis_[i];
+  }
 
-  // if(vec * f.n < .5 && vec * f.n > -.5) { // 1 = sphere radius
-  // double dot_wall_speed = f.n * s.speed;
-  // s.speed   -= 2 * f.n * dot_wall_speed;
-  // s.speed[2] = 0;
-  // s.speed[3] = 0;
-  // }
-  // };
-
-  // hun(left);
-  // hun(bottom);
-  // hun(right);
-  // hun(top);
-  // };
+  return closest;
 }
 
-void Physic::collision(OOBB& a, SphereBB& b) {
+void Physic::collision(SphereBB& a, OBB& b) {
+  const GLVector<XYZW> closest = closest_point_on_OBB(*a.origin_, b);
+ GLVector<XYZW> distance = closest - *a.origin_;
+
+  if(distance * distance <= a.radius_ * a.radius_) {
+    distance.Normalize();
+
+    a.speed_ -= 2 * distance * (distance * a.speed_);
+    a.speed_[2] = 0;
+    a.speed_[3] = 0;
+  }
+}
+
+void Physic::collision(OBB& a, SphereBB& b) {
   collision(b, a);
 }
 
-void Physic::collision(OOBB& a, OOBB& b) {}
+void Physic::collision(OBB& a, OBB& b) {
+
+}

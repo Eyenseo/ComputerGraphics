@@ -18,6 +18,9 @@ template<GLVectorType T>class GLVector {
   GLdouble* vec_;
 
 public:
+  static const GLVector XVec;
+  static const GLVector YVec;
+  static const GLVector ZVec;
 
   GLVector()
     : type_(T),

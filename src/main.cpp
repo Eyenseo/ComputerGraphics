@@ -363,40 +363,60 @@ void make_objects() {
   objects_.push_front(temp);
   hitables_.push_front((Sphere*)temp);
 
-  dif += 1.1;
-  temp = new Sphere(dif, dif, 5.6);
-  objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  // dif += 1.1;
+  // temp = new Sphere(dif, dif, 5.6);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Sphere*)temp);
 
-  dif += 1.1;
-  temp = new Sphere(dif, dif, 5.6);
-  objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  // dif += 1.1;
+  // temp = new Sphere(dif, dif, 5.6);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Sphere*)temp);
 
-  dif += 1.1;
-  temp = new Sphere(dif, dif, 5.6);
-  objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  // dif += 1.1;
+  // temp = new Sphere(dif, dif, 5.6);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Sphere*)temp);
 
-  dif += 1.1;
-  temp = new Sphere(dif, dif, 5.6);
-  objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  // dif += 1.1;
+  // temp = new Sphere(dif, dif, 5.6);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Sphere*)temp);
 
-  dif += 1.1;
-  temp = new Sphere(dif, dif, 5.6);
-  objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  // dif += 1.1;
+  // temp = new Sphere(dif, dif, 5.6);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Sphere*)temp);
 
-  dif += 1.1;
-  temp = new Sphere(dif, dif, 5.6);
-  objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  // dif += 1.1;
+  // temp = new Sphere(dif, dif, 5.6);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Sphere*)temp);
 
-  dif += 1.1;
-  temp = new Sphere(dif, dif, 5.6);
+  // dif += 1.1;
+  // temp = new Sphere(dif, dif, 5.6);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Sphere*)temp);
+
+
+
+  temp  = new Cube(0, 0, 5.6);
+  temp->set_rotation_z(45);
+  // temp->set_scale_y(0.25);
+  temp->set_color(213, 123, 34, 0);
   objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  hitables_.push_front((Cube*)temp);
+
+  // temp  = new Cube(2, -2, 5.6);
+  // temp->set_color(213, 123, 34, 0);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Cube*)temp);
+
+  // temp  = new Cube(-2, 2, 5.6);
+  // temp->set_color(213, 123, 34, 0);
+  // objects_.push_front(temp);
+  // hitables_.push_front((Cube*)temp);
+
 
   temp  = new Table(0, 0, 0);
   table = (Table*)temp;
@@ -582,9 +602,9 @@ int main() {
     draw();
     mouse_interaction(window);
 
+    phy.collision(hitables_);
     glPopMatrix();
 
-    phy.collision(hitables_);
     calcFPS(1, window, "Simple 3D Animation");
 
     glfwSwapBuffers(window);

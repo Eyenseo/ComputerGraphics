@@ -3,14 +3,26 @@
 #include <sstream>
 
 Cube::Cube()
-  : Drawable() {}
+  : Drawable(),
+  OBB(&(Drawable::origin_)) {}
 
 Cube::Cube(double origin_x, double origin_y, double origin_z)
-  : Drawable(origin_x, origin_y, origin_z) {}
+  : Drawable(origin_x, origin_y, origin_z),
+  OBB(&(Drawable::origin_)) {
+
+  local_axis_[0][0] = 1;
+  local_axis_[1][1] = 1;
+  local_axis_[2][2] = 1;
+
+  half_length_[0] = .5;
+  half_length_[1] = .5;
+  half_length_[2] = .5;
+}
 
 Cube::Cube(double origin_x, double origin_y, double origin_z,
            unsigned char colors)
-  : Drawable(origin_x, origin_y, origin_z, colors)  {}
+  : Drawable(origin_x, origin_y, origin_z, colors) ,
+  OBB(&(Drawable::origin_)) {}
 
 Cube::~Cube() {}
 
@@ -35,8 +47,6 @@ void Cube::draw() {
         glEnd();
       };
 
-  // faces_->clear();
-
   set_material_color(1, 0);
 
   // glEnable(GL_RESCALE_NORMAL); // TODO Needed?
@@ -45,21 +55,17 @@ void Cube::draw() {
               origin_[0], origin_[1], origin_[2]);
   glScalef(scale_[0], scale_[1], scale_[2]);
 
-  glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
 
-  // auto mat_out = [&]() -> std::string {
-  // std::ostringstream ss;
+  GLMatrix mv;
+  glGetDoublev(GL_MODELVIEW_MATRIX, mv);
+  local_axis_[0] = (mv * GLVector<XYZW>::XVec);
+  local_axis_[1] = (mv * GLVector<XYZW>::YVec);
+  local_axis_[2] = (mv * GLVector<XYZW>::ZVec);
 
-  // for(unsigned int m = 0; m < 4; m++) {
-  // for(int n = 0; n < 4; n++) {
-  // ss << model_view[m + n * 4] << '\t' << '\t';
-  // }
-  // ss << '\n';
-  // }
-  // return ss.str();
-  // };
 
-  // std::cout << mat_out() << std::endl;
+  for(unsigned int i = 0; i < 3; ++i) {
+    local_axis_[i][3] = 0;
+  }
 
   // Bottom
   rotate_from(0, 0, 0, 0, 0, -.5);

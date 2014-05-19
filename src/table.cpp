@@ -1,10 +1,12 @@
 #include "include/table.hpp"
 
 Table::Table()
-  : Drawable() {}
+  : Drawable(),
+  OBB(&(Drawable::origin_))  {}
 
 Table::Table(double origin_x, double origin_y, double origin_z)
-  : Drawable(origin_x, origin_y, origin_z, 3) {
+  : Drawable(origin_x, origin_y, origin_z, 3),
+  OBB(&(Drawable::origin_))  {
   set_color(32, 80, 22, 0);
   set_color(40, 20, 11, 1);
   set_color( 7,  9, 24, 2);
@@ -12,7 +14,8 @@ Table::Table(double origin_x, double origin_y, double origin_z)
 
 Table::Table(double origin_x, double origin_y, double origin_z,
              unsigned char colors)
-  : Drawable(origin_x, origin_y, origin_z, colors)  {}
+  : Drawable(origin_x, origin_y, origin_z, colors),
+  OBB(&(Drawable::origin_))   {}
 
 Table::~Table() {}
 

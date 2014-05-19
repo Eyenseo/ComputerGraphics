@@ -13,7 +13,6 @@ protected:
   GLVector<XYZW> origin_;
   GLVector<XYZ>  rotation_;
   GLVector<XYZ>  scale_;
-  GLMatrix model_view;
   double*  color_;
   unsigned char colors_;
 

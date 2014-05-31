@@ -16,7 +16,7 @@
 
 #include "include/physic.hpp"
 
-static std::forward_list < std::function < void(int, int) >> key_callbacks_;
+static std::forward_list<std::function<void(int, int)>> key_callbacks_;
 static std::forward_list<Drawable*> objects_;
 static std::forward_list<Hitable*>  hitables_;
 
@@ -37,7 +37,7 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-static double mouse_divider_ = 2;
+static double mouse_divider_ = 1;
 static bool   speed_button_pressed_ = false;
 
 static Table*  table;
@@ -319,9 +319,10 @@ void init_lighting() {
 void make_objects() {
   Drawable* temp;
 
-  double dif = -4;
+  double dif_x = -4;
+  double dif_y = -4;
 
-  temp = new Sphere(dif, dif, 5.6);
+  temp = new Sphere(dif_x, dif_y, 7.61);
   interactive = dynamic_cast<Sphere*>(temp);
   temp->set_color(.7, .7, .7, 0);
   key_callbacks_.push_front(
@@ -363,90 +364,68 @@ void make_objects() {
   objects_.push_front(temp);
   hitables_.push_front((Sphere*)temp);
 
-  // dif += 1.1;
-  // temp = new Sphere(dif, dif, 5.6);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Sphere*)temp);
+  for(unsigned int i = 0; i < 13; ++i) {
+    switch(i % 3) {
+      case 0:
+        dif_x += 1.1;
+        break;
+      case 1:
+        dif_x += 1.1;
+        break;
+      case 2:
+        dif_x -= 1.1;
+        dif_y += 1.1;
+    }
+    temp = new Sphere(dif_x, dif_y, 5.61);
+    objects_.push_front(temp);
+    hitables_.push_front((Sphere*)temp);
+  }
+  (*hitables_.begin())->set_moveable(false);
+  ((Sphere*)*hitables_.begin())->set_color(123, 12, 12, 0);
 
-  // dif += 1.1;
-  // temp = new Sphere(dif, dif, 5.6);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Sphere*)temp);
-
-  // dif += 1.1;
-  // temp = new Sphere(dif, dif, 5.6);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Sphere*)temp);
-
-  // dif += 1.1;
-  // temp = new Sphere(dif, dif, 5.6);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Sphere*)temp);
-
-  // dif += 1.1;
-  // temp = new Sphere(dif, dif, 5.6);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Sphere*)temp);
-
-  // dif += 1.1;
-  // temp = new Sphere(dif, dif, 5.6);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Sphere*)temp);
-
-  // dif += 1.1;
-  // temp = new Sphere(dif, dif, 5.6);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Sphere*)temp);
-
-
-
-  temp  = new Cube(0, 0, 5.6);
-  temp->set_rotation_z(45);
-  // temp->set_scale_y(0.25);
+  temp  = new Cube(2, -2, 5.61);
   temp->set_color(213, 123, 34, 0);
+  temp->set_rotation_x(45);
+  temp->set_rotation_z(45);
   objects_.push_front(temp);
   hitables_.push_front((Cube*)temp);
+  (*hitables_.begin())->set_moveable(false);
 
-  // temp  = new Cube(2, -2, 5.6);
-  // temp->set_color(213, 123, 34, 0);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Cube*)temp);
+  temp  = new Cube(-2, 2, 5.61);
+  temp->set_color(213, 123, 34, 0);
+  temp->set_scale_y(0.25);
+  objects_.push_front(temp);
+  hitables_.push_front((Cube*)temp);
+  (*hitables_.begin())->set_moveable(false);
 
-  // temp  = new Cube(-2, 2, 5.6);
-  // temp->set_color(213, 123, 34, 0);
-  // objects_.push_front(temp);
-  // hitables_.push_front((Cube*)temp);
+  temp  = new Cube(-4, 4, 5.61);
+  temp->set_color(213, 123, 34, 0);
+  temp->set_rotation_x(45);
+  temp->set_rotation_z(45);
+  temp->set_scale_y(0.25);
+  objects_.push_front(temp);
+  hitables_.push_front((Cube*)temp);
+  (*hitables_.begin())->set_moveable(false);
 
+  temp  = new Cube(-1.25, -2, 5.2);
+  temp->set_color(36, 156, 49, 0);
+  temp->set_rotation_x(90);
+  temp->set_rotation_y(-15);
+  temp->set_rotation_z(15);
+  temp->set_scale_x(2);
+  temp->set_scale_y(0.2);
+  temp->set_scale_z(2);
+  objects_.push_front(temp);
+  hitables_.push_front((Cube*)temp);
+  (*hitables_.begin())->set_moveable(false);
 
   temp  = new Table(0, 0, 0);
+  // temp->set_rotation_y(45);
   table = (Table*)temp;
   temp->set_color(15, 36, 117, 0);
   objects_.push_front(temp);
-
-  // temp = new AnimatedCube(0, 0, 0, 2);
-  // temp->set_color(0, 0, 1, 0);
-  // temp->set_color(1, 0, 0, 1);
-  // key_callbacks_.push_front(
-  // [temp](int event, int action) {
-  // if((GLFW_KEY_O == event) && (action == 1))
-  // ((AnimatedCube*)temp)->open();
-  // });
-  // key_callbacks_.push_front(
-  // [temp](int event, int action) {
-  // if((GLFW_KEY_C == event) && (action == 1))
-  // ((AnimatedCube*)temp)->close();
-  // });
-  // key_callbacks_.push_front(
-  // [temp](int event, int action) {
-  // if((93 == event) && (action == 1)) // 93 = +
-  // temp->set_scale(temp->get_scale() + .5);
-  // });
-  // key_callbacks_.push_front(
-  // [temp](int event, int action) {
-  // if((47 == event) && (action == 1)) // 47 = -
-  // temp->set_scale(temp->get_scale() - .5);
-  // });
-  // objects_.push_front(temp);
+  hitables_.push_front((Table*)temp);
+  (*hitables_.begin())->set_moveable(false);
 }
 
 /**
@@ -594,15 +573,17 @@ int main() {
     });
 
   make_objects();
-  Physic phy;
+  Physic phy(hitables_);
 
   while(!glfwWindowShouldClose(window)) {
+    phy.collision();
+
     init_view();
     init_lighting();
     draw();
+
     mouse_interaction(window);
 
-    phy.collision(hitables_);
     glPopMatrix();
 
     calcFPS(1, window, "Simple 3D Animation");

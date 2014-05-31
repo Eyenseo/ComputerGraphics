@@ -48,6 +48,12 @@ public:
     }
   }
 
+  GLVector(GLVector&& rhs)
+    : type_(T),
+    vec_(rhs.vec_) {
+    rhs.vec_ = nullptr;
+  }
+
   template<GLVectorType U = T, typename
              = typename std::enable_if<U == XYZ>::type>
   GLVector(double x, double y, double z)

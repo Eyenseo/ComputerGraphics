@@ -9,18 +9,19 @@
 
 class Physic {
   GLVector<XYZW> closest_point_on_OBB(const GLVector<XYZW>& a, const OBB& b);
+  std::forward_list<BoundingBox*> boxes_;
 
 public:
 
   Physic();
+  Physic(std::forward_list<Hitable*>objects);
   ~Physic();
 
-  void collision(std::forward_list<Hitable*>objects);
+  void collision();
   void collision(SphereBB& a, SphereBB& b);
   void collision(SphereBB& a, OBB& b);
   void collision(OBB& a, SphereBB& b);
   void collision(OBB& a, OBB& b);
-
 };
 
 #endif // ifndef PHYSIC_HPP

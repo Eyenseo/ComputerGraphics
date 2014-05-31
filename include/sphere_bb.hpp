@@ -1,22 +1,35 @@
 #ifndef SPHERE_BB
 #define SPHERE_BB
 
-#include "hitable.hpp"
+#include "bounding_box.hpp"
 
-class SphereBB : public Hitable {
+class Physic;
+class SphereBB : public BoundingBox {
   friend Physic;
 
 
-  SphereBB() {
-  }
-
 protected:
   double radius_;
+  const double radius_orig_;
 
-public:
-  SphereBB(GLVector<XYZW>* origin) : Hitable(origin) {
+  SphereBB()
+      : BoundingBox(nullptr, nullptr)
+      , radius_(1)
+      , radius_orig_(1) {
   }
 
-  virtual ~SphereBB() {}
+public:
+  SphereBB(Hitable* h, GLVector<XYZW>* origin, double radius)
+      : BoundingBox(h, origin)
+      , radius_(radius)
+      , radius_orig_(radius) {
+  }
+
+  virtual ~SphereBB() {
+  }
+
+  void update_scale(const GLVector<XYZ>& scale) {
+    radius_ = radius_orig_ * scale[0];
+  }
 };
-#endif // ifndef SPHERE_BB
+#endif  // ifndef SPHERE_BB

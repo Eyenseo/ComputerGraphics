@@ -17,6 +17,12 @@ public:
 
   GLMatrix() {
     mat_ = new GLdouble[COL_LENGTH * ROW_LENGTH];
+
+    for(unsigned char i = 0; i < ROW_LENGTH; ++i) {
+      for(unsigned char j = 0; j < COL_LENGTH; ++j) {
+        set_data(i, j, 0);
+      }
+    }
   }
 
   // copy constructor

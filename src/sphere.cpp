@@ -1,23 +1,35 @@
 #include "include/sphere.hpp"
 
-Sphere::Sphere()
-  : Drawable(),
-  SphereBB(&(Drawable::origin_)) {}
+Sphere::Sphere() : Drawable(), Hitable() {
+}
 
 Sphere::Sphere(double origin_x, double origin_y, double origin_z)
-  : Drawable(origin_x, origin_y, origin_z, 1),
-  SphereBB(&(Drawable::origin_)) {
-  radius_ = 0.5;
+    : Drawable(origin_x, origin_y, origin_z, 1)
+    , Hitable() {
+  sb_ = new SphereBB(this, &origin_, .5);
+  add_bounding_box(sb_);
 }
 
 Sphere::Sphere(double origin_x, double origin_y, double origin_z,
                unsigned char colors)
-  : Drawable(origin_x, origin_y, origin_z, colors),
-  SphereBB(&(Drawable::origin_)) {
-  radius_ = 0.5;
+    : Drawable(origin_x, origin_y, origin_z, colors)
+    , Hitable() {
+  sb_ = new SphereBB(this, &origin_, .5);
+  add_bounding_box(sb_);
 }
 
-Sphere::~Sphere() {}
+Sphere::~Sphere() {
+  delete sb_;
+}
+
+void Sphere::step() {
+   if(moveable_) {
+    //TODO review slow speeds are a problem on edges
+    speed_ = speed_ + (GLVector<XYZW>::ZVec * (-9.81 * 0.005))
+             - (speed_ * fraction_);
+    origin_ += speed_ * 0.16;
+  }
+}
 
 void Sphere::draw() {
   GLVector<XYZW> normal, v1;
@@ -34,9 +46,6 @@ void Sphere::draw() {
   set_material_color(1, 0);
 
   glEnable(GL_RESCALE_NORMAL);
-
-  origin_ += speed_;
-  speed_  -= speed_ * fraction_;
 
   rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_[0],
               origin_[1], origin_[2]);
@@ -56,7 +65,8 @@ void Sphere::draw() {
       s2 = sin(a2);
       c2 = cos(a2);
 
-      normal = c1 * GLVector<XYZW>::XVec + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
+      normal = c1 * GLVector<XYZW>::XVec
+               + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
       v1     = 0.5 * normal;
 
       glNormal3dv(normal);
@@ -67,7 +77,8 @@ void Sphere::draw() {
       s2 = sin(a2 + a2d);
       c2 = cos(a2 + a2d);
 
-      normal = c1 * GLVector<XYZW>::XVec + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
+      normal = c1 * GLVector<XYZW>::XVec
+               + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
       v1     = 0.5 * normal;
 
       glNormal3dv(normal.get_vector());
@@ -76,4 +87,34 @@ void Sphere::draw() {
     glEnd();
   }
   glPopMatrix();
+}
+
+void Sphere::set_scale(const GLVector<XYZ>& scale) {
+  set_scale(scale[0], scale[1], scale[2]);
+  sb_->update_scale(scale_);
+}
+
+void Sphere::set_scale(double scale) {
+  Drawable::set_scale(scale, scale, scale);
+  sb_->update_scale(scale_);
+}
+
+void Sphere::set_scale(double scale_x, double, double) {
+  Drawable::set_scale(scale_x, scale_x, scale_x);
+  sb_->update_scale(scale_);
+}
+
+void Sphere::set_scale_x(double scale_x) {
+  Drawable::set_scale(scale_x, scale_x, scale_x);
+  sb_->update_scale(scale_);
+}
+
+void Sphere::set_scale_y(double scale_y) {
+  Drawable::set_scale(scale_y, scale_y, scale_y);
+  sb_->update_scale(scale_);
+}
+
+void Sphere::set_scale_z(double scale_z) {
+  Drawable::set_scale(scale_z, scale_z, scale_z);
+  sb_->update_scale(scale_);
 }

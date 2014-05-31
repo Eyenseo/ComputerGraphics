@@ -122,8 +122,19 @@ void Drawable::set_origin_z(double origin_z) {
   origin_[2] = origin_z;
 }
 
-const GLVector<XYZ>Drawable::get_rotation() const {
+const GLVector<XYZ> Drawable::get_rotation() const {
   return rotation_;
+}
+
+void Drawable::set_rotation(const GLVector<XYZ>& rotation) {
+  rotation_ = GLVector<XYZ>(rotation);
+}
+
+void Drawable::set_rotation(double rotation_x, double rotation_y,
+                            double rotation_z) {
+  rotation_[0] = rotation_x;
+  rotation_[1] = rotation_y;
+  rotation_[2] = rotation_z;
 }
 
 GLdouble Drawable::get_rotation_x() const {
@@ -139,7 +150,7 @@ GLdouble Drawable::get_rotation_y() const {
 }
 
 void Drawable::set_rotation_y(double rotation_y) {
-  rotation_[0] = rotation_y;
+  rotation_[1] = rotation_y;
 }
 
 GLdouble Drawable::get_rotation_z() const {

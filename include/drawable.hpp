@@ -46,6 +46,9 @@ public:
   virtual void                set_origin_z(double origin_z);
 
   virtual const GLVector<XYZ> get_rotation() const;
+  virtual void set_rotation(const GLVector<XYZ>& rotation);
+  virtual void set_rotation(double rotation_x, double rotation_y,
+                            double rotation_z);
 
   virtual GLdouble            get_rotation_x() const;
   virtual void                set_rotation_x(double rotation);

@@ -1,23 +1,340 @@
 #include "include/table.hpp"
 
 Table::Table()
-  : Drawable(),
-  OBB(&(Drawable::origin_))  {}
-
-Table::Table(double origin_x, double origin_y, double origin_z)
-  : Drawable(origin_x, origin_y, origin_z, 3),
-  OBB(&(Drawable::origin_))  {
+    : Drawable()
+    , Hitable()
+    , boxes_origin_{
+          // TopLeft Leg
+          GLVector<XYZW>(-inner_table_length_ / 2 + border_width_ / 2,
+                         inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ / 2,
+                         0),
+          // BottomLeft Leg
+          GLVector<XYZW>(-inner_table_length_ / 2 + border_width_ / 2,
+                         -inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ / 2,
+                         0),
+          // BottomRight Leg
+          GLVector<XYZW>(inner_table_length_ / 2 - border_width_ / 2,
+                         -inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ / 2,
+                         0),
+          // TopRight Leg
+          GLVector<XYZW>(inner_table_length_ / 2 - border_width_ / 2,
+                         inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ / 2,
+                         0),
+          // Plank
+          GLVector<XYZW>(0, 0, inner_table_height_ + plank_height_ / 2, 0),
+          // LeftBorder
+          GLVector<XYZW>(-inner_table_length_ / 2 - border_width_ / 2,
+                         0,
+                         inner_table_height_ + border_height_ / 2,
+                         0),
+          // BottomBorder
+          GLVector<XYZW>(0,
+                         -inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ + border_height_ / 2,
+                         0),
+          // RightBorder
+          GLVector<XYZW>(inner_table_length_ / 2 + border_width_ / 2,
+                         0,
+                         inner_table_height_ + border_height_ / 2,
+                         0),
+          // TopBorder
+          GLVector<XYZW>(0,
+                         +inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ + border_height_ / 2,
+                         0)}
+    , boxes_{// TopLeft Leg
+             OBB(this,
+                 &boxes_origin_[0],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // BottomLeft Leg
+             OBB(this,
+                 &boxes_origin_[1],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // BottomRight Leg
+             OBB(this,
+                 &boxes_origin_[2],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // TopRight Leg
+             OBB(this,
+                 &boxes_origin_[3],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // Plank
+             OBB(this,
+                 &boxes_origin_[4],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               inner_table_width_ / 2,
+                               plank_height_ / 2)),
+             // LeftBorder
+             OBB(this,
+                 &boxes_origin_[5],
+                 GLVector<XYZ>(border_width_ / 2,
+                               inner_table_width_ / 2,
+                               border_height_ / 2)),
+             // BottomBorder
+             OBB(this,
+                 &boxes_origin_[6],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               border_width_ / 2,
+                               border_height_ / 2)),
+             // RightBorder
+             OBB(this,
+                 &boxes_origin_[7],
+                 GLVector<XYZ>(border_width_ / 2,
+                               inner_table_width_ / 2,
+                               border_height_ / 2)),
+             // TopBorder
+             OBB(this,
+                 &boxes_origin_[8],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               border_width_ / 2,
+                               border_height_ / 2))} {
   set_color(32, 80, 22, 0);
   set_color(40, 20, 11, 1);
-  set_color( 7,  9, 24, 2);
+  set_color(7, 9, 24, 2);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    add_bounding_box(&boxes_[i]);
+  }
 }
 
-Table::Table(double origin_x, double origin_y, double origin_z,
-             unsigned char colors)
-  : Drawable(origin_x, origin_y, origin_z, colors),
-  OBB(&(Drawable::origin_))   {}
+Table::Table(double origin_x, double origin_y, double origin_z)
+    : Drawable(origin_x, origin_y, origin_z, 3)
+    , Hitable()
+    , boxes_origin_{
+          // TopLeft Leg
+          GLVector<XYZW>(-inner_table_length_ / 2 + border_width_ / 2,
+                         inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // BottomLeft Leg
+          GLVector<XYZW>(-inner_table_length_ / 2 + border_width_ / 2,
+                         -inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // BottomRight Leg
+          GLVector<XYZW>(inner_table_length_ / 2 - border_width_ / 2,
+                         -inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // TopRight Leg
+          GLVector<XYZW>(inner_table_length_ / 2 - border_width_ / 2,
+                         inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // Plank
+          GLVector<XYZW>(0, 0, inner_table_height_ + plank_height_ / 2, 1),
+          // LeftBorder
+          GLVector<XYZW>(-inner_table_length_ / 2 - border_width_ / 2,
+                         0,
+                         inner_table_height_ + border_height_ / 2,
+                         1),
+          // BottomBorder
+          GLVector<XYZW>(0,
+                         -inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ + border_height_ / 2,
+                         1),
+          // RightBorder
+          GLVector<XYZW>(inner_table_length_ / 2 + border_width_ / 2,
+                         0,
+                         inner_table_height_ + border_height_ / 2,
+                         1),
+          // TopBorder
+          GLVector<XYZW>(0,
+                         +inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ + border_height_ / 2,
+                         1)}
+    , boxes_{// TopLeft Leg
+             OBB(this,
+                 &boxes_origin_[0],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // BottomLeft Leg
+             OBB(this,
+                 &boxes_origin_[1],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // BottomRight Leg
+             OBB(this,
+                 &boxes_origin_[2],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // TopRight Leg
+             OBB(this,
+                 &boxes_origin_[3],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // Plank
+             OBB(this,
+                 &boxes_origin_[4],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               inner_table_width_ / 2,
+                               plank_height_ / 2)),
+             // LeftBorder
+             OBB(this,
+                 &boxes_origin_[5],
+                 GLVector<XYZ>(border_width_ / 2,
+                               inner_table_width_ / 2,
+                               border_height_ / 2)),
+             // BottomBorder
+             OBB(this,
+                 &boxes_origin_[6],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               border_width_ / 2,
+                               border_height_ / 2)),
+             // RightBorder
+             OBB(this,
+                 &boxes_origin_[7],
+                 GLVector<XYZ>(border_width_ / 2,
+                               inner_table_width_ / 2,
+                               border_height_ / 2)),
+             // TopBorder
+             OBB(this,
+                 &boxes_origin_[8],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               border_width_ / 2,
+                               border_height_ / 2))} {
+  set_color(32, 80, 22, 0);
+  set_color(40, 20, 11, 1);
+  set_color(7, 9, 24, 2);
 
-Table::~Table() {}
+  for(unsigned int i = 0; i < 9; ++i) {
+    add_bounding_box(&boxes_[i]);
+  }
+}
+
+Table::Table(double origin_x,
+             double origin_y,
+             double origin_z,
+             unsigned char colors)
+    : Drawable(origin_x, origin_y, origin_z, colors)
+    , Hitable()
+    , boxes_origin_{
+          // TopLeft Leg
+          GLVector<XYZW>(-inner_table_length_ / 2 + border_width_ / 2,
+                         inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // BottomLeft Leg
+          GLVector<XYZW>(-inner_table_length_ / 2 + border_width_ / 2,
+                         -inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // BottomRight Leg
+          GLVector<XYZW>(inner_table_length_ / 2 - border_width_ / 2,
+                         -inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // TopRight Leg
+          GLVector<XYZW>(inner_table_length_ / 2 - border_width_ / 2,
+                         inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ / 2,
+                         1),
+          // Plank
+          GLVector<XYZW>(0, 0, inner_table_height_ + plank_height_ / 2, 1),
+          // LeftBorder
+          GLVector<XYZW>(-inner_table_length_ / 2 - border_width_ / 2,
+                         0,
+                         inner_table_height_ + border_height_ / 2,
+                         1),
+          // BottomBorder
+          GLVector<XYZW>(0,
+                         -inner_table_width_ / 2 - border_width_ / 2,
+                         inner_table_height_ + border_height_ / 2,
+                         1),
+          // RightBorder
+          GLVector<XYZW>(inner_table_length_ / 2 + border_width_ / 2,
+                         0,
+                         inner_table_height_ + border_height_ / 2,
+                         1),
+          // TopBorder
+          GLVector<XYZW>(0,
+                         +inner_table_width_ / 2 + border_width_ / 2,
+                         inner_table_height_ + border_height_ / 2,
+                         1)}
+    , boxes_{// TopLeft Leg
+             OBB(this,
+                 &boxes_origin_[0],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // BottomLeft Leg
+             OBB(this,
+                 &boxes_origin_[1],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // BottomRight Leg
+             OBB(this,
+                 &boxes_origin_[2],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // TopRight Leg
+             OBB(this,
+                 &boxes_origin_[3],
+                 GLVector<XYZ>(border_width_ / 2,
+                               border_width_ / 2,
+                               inner_table_height_ / 2)),
+             // Plank
+             OBB(this,
+                 &boxes_origin_[4],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               inner_table_width_ / 2,
+                               plank_height_ / 2)),
+             // LeftBorder
+             OBB(this,
+                 &boxes_origin_[5],
+                 GLVector<XYZ>(border_width_ / 2,
+                               inner_table_width_ / 2,
+                               border_height_ / 2)),
+             // BottomBorder
+             OBB(this,
+                 &boxes_origin_[6],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               border_width_ / 2,
+                               border_height_ / 2)),
+             // RightBorder
+             OBB(this,
+                 &boxes_origin_[7],
+                 GLVector<XYZ>(border_width_ / 2,
+                               inner_table_width_ / 2,
+                               border_height_ / 2)),
+             // TopBorder
+             OBB(this,
+                 &boxes_origin_[8],
+                 GLVector<XYZ>(inner_table_length_ / 2,
+                               border_width_ / 2,
+                               border_height_ / 2))} {
+  set_color(32, 80, 22, 0);
+  set_color(40, 20, 11, 1);
+  set_color(7, 9, 24, 2);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    add_bounding_box(&boxes_[i]);
+  }
+}
+
+Table::~Table() {
+}
+
+void Table::step() {
+}
 
 void Table::draw() {
   GLVector<XYZW> bottom_left  = GLVector<XYZW>(-.5, -.5, 0, 1);
@@ -30,6 +347,12 @@ void Table::draw() {
               origin_[0], origin_[1], origin_[2]);
   glScalef(scale_[0], scale_[1], scale_[2]);
 
+  GLMatrix mv;
+  glGetDoublev(GL_MODELVIEW_MATRIX, mv);
+ /* local_axis_[0] = (mv * GLVector<XYZW>::XVec);
+  local_axis_[1] = (mv * GLVector<XYZW>::YVec);
+  local_axis_[2] = (mv * GLVector<XYZW>::ZVec);
+*/
   set_material_color(1, 1);
   short_border();
   long_border();
@@ -537,4 +860,93 @@ void Table::legs() {
   bottom_right[0] = inner_table_length_ / 2;
   bottom_right[1] = inner_table_width_ / 2;
   face(top_left, bottom_left, bottom_right, top_right);
+}
+
+void Table::set_rotation(const GLVector<XYZ>& rotation) {
+  Drawable::set_rotation(rotation);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_rotation(rotation_);
+  }
+}
+
+void Table::set_rotation(double rotation_x, double rotation_y,
+                         double rotation_z) {
+  Drawable::set_rotation(rotation_x, rotation_y, rotation_z);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_rotation(rotation_);
+  }
+}
+
+void Table::set_rotation_x(double rotation) {
+  Drawable::set_rotation_x(rotation);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_rotation(rotation_);
+  }
+}
+
+void Table::set_rotation_y(double rotation) {
+  Drawable::set_rotation_y(rotation);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_rotation(rotation_);
+  }
+}
+
+void Table::set_rotation_z(double rotation) {
+  Drawable::set_rotation_z(rotation);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_rotation(rotation_);
+  }
+}
+
+void Table::set_scale(const GLVector<XYZ>& scale) {
+  Drawable::set_scale(scale);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_scale(scale_);
+  }
+}
+
+void Table::set_scale(double scale) {
+  Drawable::set_scale(scale);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_scale(scale_);
+  }
+}
+
+void Table::set_scale(double scale_x, double scale_y, double scale_z) {
+  Drawable::set_scale(scale_x, scale_y, scale_z);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_scale(scale_);
+  }
+}
+
+void Table::set_scale_x(double scale_x) {
+  Drawable::set_scale_x(scale_x);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_scale(scale_);
+  }
+}
+
+void Table::set_scale_y(double scale_y) {
+  Drawable::set_scale_y(scale_y);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_scale(scale_);
+  }
+}
+
+void Table::set_scale_z(double scale_z) {
+  Drawable::set_scale_z(scale_z);
+
+  for(unsigned int i = 0; i < 9; ++i) {
+    boxes_[i].update_scale(scale_);
+  }
 }

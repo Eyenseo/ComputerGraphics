@@ -3,28 +3,37 @@
 #include <sstream>
 
 Cube::Cube()
-  : Drawable(),
-  OBB(&(Drawable::origin_)) {}
+    : Drawable()
+    , Hitable()
+    , obb_(this, &(Drawable::origin_), GLVector<XYZ>(0.5, 0.5, 0.5)) {
+  add_bounding_box(&obb_);
+}
 
 Cube::Cube(double origin_x, double origin_y, double origin_z)
-  : Drawable(origin_x, origin_y, origin_z),
-  OBB(&(Drawable::origin_)) {
-
-  local_axis_[0][0] = 1;
-  local_axis_[1][1] = 1;
-  local_axis_[2][2] = 1;
-
-  half_length_[0] = .5;
-  half_length_[1] = .5;
-  half_length_[2] = .5;
+    : Drawable(origin_x, origin_y, origin_z)
+    , Hitable()
+    , obb_(this, &(Drawable::origin_), GLVector<XYZ>(0.5, 0.5, 0.5)) {
+  add_bounding_box(&obb_);
 }
 
 Cube::Cube(double origin_x, double origin_y, double origin_z,
            unsigned char colors)
-  : Drawable(origin_x, origin_y, origin_z, colors) ,
-  OBB(&(Drawable::origin_)) {}
+    : Drawable(origin_x, origin_y, origin_z, colors)
+    , Hitable()
+    , obb_(this, &(Drawable::origin_), GLVector<XYZ>(0.5, 0.5, 0.5)) {
+  add_bounding_box(&obb_);
+}
 
 Cube::~Cube() {}
+
+void Cube::step() {
+   if(moveable_) {
+    //TODO review slow speeds are a problem on edges
+    speed_ = speed_ + (GLVector<XYZW>::ZVec * (-9.81 * 0.005))
+             - (speed_ * fraction_);
+    origin_ += speed_ * 0.16;
+  }
+}
 
 void Cube::draw() {
   GLVector<XYZW> bottom_left  = GLVector<XYZW>(-.5, -.5, 0, 1);
@@ -54,18 +63,6 @@ void Cube::draw() {
   rotate_from(rotation_[0], rotation_[1], rotation_[2],
               origin_[0], origin_[1], origin_[2]);
   glScalef(scale_[0], scale_[1], scale_[2]);
-
-
-  GLMatrix mv;
-  glGetDoublev(GL_MODELVIEW_MATRIX, mv);
-  local_axis_[0] = (mv * GLVector<XYZW>::XVec);
-  local_axis_[1] = (mv * GLVector<XYZW>::YVec);
-  local_axis_[2] = (mv * GLVector<XYZW>::ZVec);
-
-
-  for(unsigned int i = 0; i < 3; ++i) {
-    local_axis_[i][3] = 0;
-  }
 
   // Bottom
   rotate_from(0, 0, 0, 0, 0, -.5);
@@ -98,4 +95,60 @@ void Cube::draw() {
 
   glPopMatrix();
   glPopMatrix();
+}
+
+void Cube::set_rotation(const GLVector<XYZ>& rotation) {
+  Drawable::set_rotation(rotation);
+  obb_.update_rotation(rotation_);
+}
+
+void Cube::set_rotation(double rotation_x, double rotation_y,
+                        double rotation_z) {
+  Drawable::set_rotation(rotation_x, rotation_y, rotation_z);
+  obb_.update_rotation(rotation_);
+}
+
+void Cube::set_rotation_x(double rotation) {
+  Drawable::set_rotation_x(rotation);
+  obb_.update_rotation(rotation_);
+}
+
+void Cube::set_rotation_y(double rotation) {
+  Drawable::set_rotation_y(rotation);
+  obb_.update_rotation(rotation_);
+}
+
+void Cube::set_rotation_z(double rotation) {
+  Drawable::set_rotation_z(rotation);
+  obb_.update_rotation(rotation_);
+}
+
+void Cube::set_scale(const GLVector<XYZ>& scale) {
+  Drawable::set_scale(scale);
+  obb_.update_scale(scale_);
+}
+
+void Cube::set_scale(double scale) {
+  Drawable::set_scale(scale);
+  obb_.update_scale(scale_);
+}
+
+void Cube::set_scale(double scale_x, double scale_y, double scale_z) {
+  Drawable::set_scale(scale_x, scale_y, scale_z);
+  obb_.update_scale(scale_);
+}
+
+void Cube::set_scale_x(double scale_x) {
+  Drawable::set_scale_x(scale_x);
+  obb_.update_scale(scale_);
+}
+
+void Cube::set_scale_y(double scale_y) {
+  Drawable::set_scale_y(scale_y);
+  obb_.update_scale(scale_);
+}
+
+void Cube::set_scale_z(double scale_z) {
+  Drawable::set_scale_z(scale_z);
+  obb_.update_scale(scale_);
 }

@@ -21,11 +21,12 @@ public:
   static const GLVector XVec;
   static const GLVector YVec;
   static const GLVector ZVec;
+  static const GLVector NVec;
 
   GLVector()
     : type_(T),
     vec_(new GLdouble[type_]) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] = 0;
     }
   }
@@ -35,7 +36,7 @@ public:
     vec_(new GLdouble[type_]) {
     assert(sizeof *copy / sizeof(GLdouble) == type_);
 
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] = copy[i];
     }
   }
@@ -43,7 +44,7 @@ public:
   GLVector(const GLVector& rhs)
     : type_(T),
     vec_(new GLdouble[type_]) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] = rhs.vec_[i];
     }
   }
@@ -82,7 +83,7 @@ public:
   double Length() const {
     double r = 0;
 
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       r += vec_[i] * vec_[i];
     }
     return sqrt(r);
@@ -91,7 +92,7 @@ public:
   double Length2() const {
     double r = 0;
 
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       r += vec_[i] * vec_[i];
     }
     return r;
@@ -114,7 +115,7 @@ public:
   }
 
   void   MinMaxExpand(GLVector& min, GLVector& max) const {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       if(vec_[i] < min.vec_[i]) {
         min.vec_[i] = vec_[i];
       }
@@ -127,7 +128,7 @@ public:
   void   Normalize() {
     double l = 1.0 / Length();
 
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] *= l;
     }
   }
@@ -147,14 +148,14 @@ public:
   }
 
   GLVector& operator=(const GLVector& rhs) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] = rhs.vec_[i];
     }
     return *this;
   }
 
   GLVector& operator+=(const double rhs) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] += rhs;
     }
     return *this;
@@ -169,7 +170,7 @@ public:
   }
 
   GLVector& operator+=(const GLVector& rhs) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] += rhs.vec_[i];
     }
     return *this;
@@ -180,7 +181,7 @@ public:
   }
 
   GLVector& operator-=(const double rhs) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] -= rhs;
     }
     return *this;
@@ -195,7 +196,7 @@ public:
   }
 
   GLVector& operator-=(const GLVector& rhs) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] -= rhs.vec_[i];
     }
     return *this;
@@ -208,14 +209,14 @@ public:
   inline friend GLVector operator-(GLVector lhs) {
     GLVector c;
 
-    for(int i = 0; i < lhs.type_; i++) {
+    for(int i = 0; i < lhs.type_; ++i) {
       c.vec_[i] = -lhs.vec_[i];
     }
     return c;
   }
 
   GLVector& operator*=(double sc) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] *= sc;
     }
     return *this;
@@ -244,7 +245,7 @@ public:
   }
 
   GLVector& operator/=(double sc) {
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       vec_[i] /= sc;
     }
     return *this;
@@ -272,7 +273,7 @@ public:
   double operator*=(const GLVector& rhs) {
     double r = 0;
 
-    for(int i = 0; i < type_; i++) {
+    for(int i = 0; i < type_; ++i) {
       r += vec_[i] * rhs.vec_[i];
     }
     return r;

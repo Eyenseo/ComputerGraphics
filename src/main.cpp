@@ -37,7 +37,7 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-static double mouse_divider_ = 1;
+static double mouse_divider_ = 2.5;
 static bool   speed_button_pressed_ = false;
 
 static Table*  table;
@@ -319,10 +319,10 @@ void init_lighting() {
 void make_objects() {
   Drawable* temp;
 
-  double dif_x = -4;
-  double dif_y = -4;
+  double dif_x = 1;
+  double dif_y = 1;
 
-  temp = new Sphere(dif_x, dif_y, 7.61);
+  temp = new Sphere(dif_x, dif_y, 6.61);
   interactive = dynamic_cast<Sphere*>(temp);
   temp->set_color(.7, .7, .7, 0);
   key_callbacks_.push_front(
@@ -364,7 +364,7 @@ void make_objects() {
   objects_.push_front(temp);
   hitables_.push_front((Sphere*)temp);
 
-  for(unsigned int i = 0; i < 13; ++i) {
+  for(unsigned int i = 0; i < 6; ++i) {
     switch(i % 3) {
       case 0:
         dif_x += 1.1;
@@ -383,7 +383,7 @@ void make_objects() {
   (*hitables_.begin())->set_moveable(false);
   ((Sphere*)*hitables_.begin())->set_color(123, 12, 12, 0);
 
-  temp  = new Cube(2, -2, 5.61);
+  temp  = new Cube(2, -2, 5.9);
   temp->set_color(213, 123, 34, 0);
   temp->set_rotation_x(45);
   temp->set_rotation_z(45);
@@ -398,7 +398,7 @@ void make_objects() {
   hitables_.push_front((Cube*)temp);
   (*hitables_.begin())->set_moveable(false);
 
-  temp  = new Cube(-4, 4, 5.61);
+  temp  = new Cube(-4, 4, 5.71);
   temp->set_color(213, 123, 34, 0);
   temp->set_rotation_x(45);
   temp->set_rotation_z(45);
@@ -407,14 +407,14 @@ void make_objects() {
   hitables_.push_front((Cube*)temp);
   (*hitables_.begin())->set_moveable(false);
 
-  temp  = new Cube(-1.25, -2, 5.2);
+  temp  = new Cube(-1.25, -2, 5.32);
   temp->set_color(36, 156, 49, 0);
-  temp->set_rotation_x(90);
-  temp->set_rotation_y(-15);
-  temp->set_rotation_z(15);
+  temp->set_rotation_x(8);
+  temp->set_rotation_y(-8);
+  temp->set_rotation_z(45);
   temp->set_scale_x(2);
-  temp->set_scale_y(0.2);
-  temp->set_scale_z(2);
+  temp->set_scale_y(2);
+  temp->set_scale_z(0.01);
   objects_.push_front(temp);
   hitables_.push_front((Cube*)temp);
   (*hitables_.begin())->set_moveable(false);
@@ -425,6 +425,16 @@ void make_objects() {
   temp->set_color(15, 36, 117, 0);
   objects_.push_front(temp);
   hitables_.push_front((Table*)temp);
+  (*hitables_.begin())->set_moveable(false);
+
+  temp = new Cube(0, 0, 0);
+  temp->set_color(16, 75, 25, 0);
+  temp->set_rotation_x(90);
+  temp->set_scale_x(200);
+  temp->set_scale_y(0.05);
+  temp->set_scale_z(200);
+  objects_.push_front(temp);
+  hitables_.push_front((Cube*)temp);
   (*hitables_.begin())->set_moveable(false);
 }
 
@@ -573,11 +583,13 @@ int main() {
     });
 
   make_objects();
-  Physic phy(hitables_);
+  Physic phy(&hitables_);
+
+  for(auto& h : hitables_) {
+    h->start(&phy);
+  }
 
   while(!glfwWindowShouldClose(window)) {
-    phy.collision();
-
     init_view();
     init_lighting();
     draw();
@@ -590,6 +602,10 @@ int main() {
 
     glfwSwapBuffers(window);
     glfwPollEvents();
+  }
+
+  for(auto& h : hitables_) {
+    h->stop();
   }
 
   glfwTerminate();

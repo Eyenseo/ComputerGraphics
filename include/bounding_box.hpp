@@ -14,17 +14,13 @@ protected:
 
   BoundingBox()
       : hitable_(nullptr)
-      , origin_(nullptr)
-      , collide_(true) {
+      , origin_(nullptr) {
   }
 
 public:
-  bool collide_;
-
   BoundingBox(Hitable* h, GLVector<XYZW>* origin)
       : hitable_(h)
-      , origin_(origin)
-      , collide_(true) {
+      , origin_(origin) {
   }
 
   virtual ~BoundingBox() {

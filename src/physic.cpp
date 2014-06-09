@@ -1,44 +1,41 @@
 #include "include/physic.hpp"
 #include "include/hitable.hpp"
 
-Physic::Physic() {
+Physic::Physic()
+    : hitables_(nullptr) {
 }
 
-Physic::Physic(std::forward_list<Hitable*> objects) {
-  for(auto object : objects) {
-    for(auto box : object->bounding_box_list) {
-      boxes_.push_front(box);
-    }
-  }
+Physic::Physic(std::forward_list<Hitable*>* hitables)
+    : hitables_(hitables) {
 }
 
 Physic::~Physic() {
 }
 
-void Physic::collision() {
-  using Inter = std::forward_list<BoundingBox*>::iterator;
-  const Inter end = boxes_.end();
+void Physic::collision(Hitable* h) {
+  if(h->is_hitable()) {
+    for(auto& hitable : *hitables_) {
+      if(h != hitable && hitable->is_hitable()) {
+        std::unique_lock<std::mutex>(hitable->m_);
 
-  for(Inter i = boxes_.begin(); i != end; ++i) {
-    (*i)->hitable_->step();
+        for(auto& other_box : hitable->bounding_box_list_) {
+          SphereBB* s1 = dynamic_cast<SphereBB*>(other_box);
+          OBB* o1 = (s1 == nullptr) ? dynamic_cast<OBB*>(other_box) : nullptr;
+          std::unique_lock<std::mutex>(h->m_);
 
-    if((*i)->collide_) {
-      SphereBB* s1 = dynamic_cast<SphereBB*>(*i);
-      OBB* o1 = (s1 == nullptr) ? dynamic_cast<OBB*>(*i) : nullptr;
+          for(auto& h_box : h->bounding_box_list_) {
+            SphereBB* s2 = dynamic_cast<SphereBB*>(h_box);
+            OBB* o2 = (s2 == nullptr) ? dynamic_cast<OBB*>(h_box) : nullptr;
 
-      for(Inter j = i; j != end; ++j) {
-        if(*i != *j) {
-          SphereBB* s2 = dynamic_cast<SphereBB*>(*j);
-          OBB* o2 = (s2 == nullptr) ? dynamic_cast<OBB*>(*j) : nullptr;
-
-          if(s1 != nullptr && s2 != nullptr) {
-            collision(*s1, *s2);
-          } else if(o1 != nullptr && o2 != nullptr) {
-            collision(*o1, *o2);
-          } else if(s1 != nullptr && o2 != nullptr) {
-            collision(*s1, *o2);
-          } else {
-            collision(*s2, *o1);
+            if(s1 != nullptr && s2 != nullptr) {
+              collision(*s1, *s2);
+            } else if(o1 != nullptr && o2 != nullptr) {
+              collision(*o1, *o2);
+            } else if(s1 != nullptr && o2 != nullptr) {
+              collision(*s1, *o2);
+            } else {
+              collision(*s2, *o1);
+            }
           }
         }
       }
@@ -148,7 +145,7 @@ void Physic::collision(SphereBB& a, OBB& b) {
       *a.origin_ += (distance - n * a.radius_);
     } else if(b.hitable_->is_moveable()) {
       // Mirror speed
-      b.hitable_->speed_ -=  2 * (b.hitable_->speed_ * n) * n;
+      b.hitable_->speed_ -= 2 * (b.hitable_->speed_ * n) * n;
 
       // Move object out of the unmoveable one
       *b.origin_ -= (distance - n * a.radius_);

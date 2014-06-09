@@ -25,64 +25,57 @@ Sphere::~Sphere() {
 void Sphere::step() {
    if(moveable_) {
     //TODO review slow speeds are a problem on edges
-    speed_ = speed_ + (GLVector<XYZW>::ZVec * (-9.81 * 0.005))
-             - (speed_ * fraction_);
-    origin_ += speed_ * 0.16;
+     speed_ += GLVector<XYZW>::ZVec * -9.81 * 0.0000016 + (speed_ * -fraction_);
+     origin_ +=  speed_ * 0.016;
   }
 }
 
 void Sphere::draw() {
-  GLVector<XYZW> normal, v1;
-  double a1, a1d,
-         a2, a2d,
-         s1, s2,
-         c1, c2;
-  int i, j,
-      n1 = 32, n2 = 32;
-
-  a1d = M_PI / n1;
-  a2d = M_PI / n2;
+  const int n1 = 32;
+  const int n2 = 32;
+  const double a1d = M_PI / n1;
+  const double a2d = M_PI / n2;
 
   set_material_color(1, 0);
 
   glEnable(GL_RESCALE_NORMAL);
 
-  rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_[0],
-              origin_[1], origin_[2]);
+  rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_[0], origin_[1],
+              origin_[2]);
   glScalef(scale_[0], scale_[1], scale_[2]);
 
   glShadeModel(GL_SMOOTH);
-  for(i = 0; i < n1; i++) {
-    a1 = i * a1d;
+  for(int i = 0; i < n1; ++i) {
+    const double a1 = i * a1d;
 
     // glBegin(GL_LINE_LOOP);
     glBegin(GL_TRIANGLE_STRIP);
-    for(j = 0; j <= n2; j++) {
-      a2 = (j + .5 * (i % 2)) * 2 * a2d;
+    for(int j = 0; j <= n2; ++j) {
+      const double a2 = (j + .5 * (i % 2)) * 2 * a2d;
+      {
+        const double s1 = sin(a1);
+        const double c1 = cos(a1);
+        const double s2 = sin(a2);
+        const double c2 = cos(a2);
 
-      s1 = sin(a1);
-      c1 = cos(a1);
-      s2 = sin(a2);
-      c2 = cos(a2);
+        const GLVector<XYZW> normal
+            = c1 * GLVector<XYZW>::XVec
+              + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
+        glNormal3dv(normal);
+        glVertex3dv(0.5 * normal);
+      }
+      {
+        const double s1 = sin(a1 + a1d);
+        const double c1 = cos(a1 + a1d);
+        const double s2 = sin(a2 + a2d);
+        const double c2 = cos(a2 + a2d);
 
-      normal = c1 * GLVector<XYZW>::XVec
-               + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
-      v1     = 0.5 * normal;
-
-      glNormal3dv(normal);
-      glVertex3dv(v1);
-
-      s1 = sin(a1 + a1d);
-      c1 = cos(a1 + a1d);
-      s2 = sin(a2 + a2d);
-      c2 = cos(a2 + a2d);
-
-      normal = c1 * GLVector<XYZW>::XVec
-               + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
-      v1     = 0.5 * normal;
-
-      glNormal3dv(normal.get_vector());
-      glVertex3dv(v1.get_vector());
+        const GLVector<XYZW> normal
+            = c1 * GLVector<XYZW>::XVec
+              + s1 * (c2 * GLVector<XYZW>::YVec + s2 * GLVector<XYZW>::ZVec);
+        glNormal3dv(normal);
+        glVertex3dv(0.5 * normal);
+      }
     }
     glEnd();
   }

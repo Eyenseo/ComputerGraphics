@@ -38,7 +38,7 @@ public:
 
   // Destructor
   ~GLMatrix() {
-    delete[]mat_;
+    delete[] mat_;
   }
 
   // returns the GLMatrix transposed
@@ -177,7 +177,7 @@ public:
           + temp[3] * mat_[12];
 
     if(det == 0.0) {
-      delete mat_;
+      delete[] mat_;
       mat_ = temp;
       return false;
     }
@@ -187,7 +187,7 @@ public:
     for(i = 0; i < 16; i++) {
       mat_[i] = mat_[i] * det;
     }
-    delete temp;
+    delete[] temp;
 
     return true;
   }
@@ -291,7 +291,7 @@ public:
       }
     }
 
-    delete mat_;
+    delete[] mat_;
     mat_ = temp;
     return *this;
   }

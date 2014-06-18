@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 #include <unistd.h>
+#include <chrono>
 
 #include "gl_vec.hpp"
 #include "bounding_box.hpp"
@@ -24,7 +25,7 @@ protected:
   std::thread* col_t_;
 
   GLVector<XYZW> speed_;
-  double fraction_ = 0.00005;
+  double fraction_ = 0.0035;
   bool moveable_;
   bool hitable_;
 
@@ -60,7 +61,8 @@ public:
           t.reset();
           step();
           phy_->collision(this);
-          usleep(16 - t.elapsed());
+          std::this_thread::sleep_for(
+              std::chrono::milliseconds((int)(16.666 - t.elapsed())));
         }
       }
     });

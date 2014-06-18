@@ -69,19 +69,19 @@ void AnimatedCube::draw() {
   GLVector<XYZW> top_right    = GLVector<XYZW>(.5, .5, 0, 1);
   GLVector<XYZW> bottom_right = GLVector<XYZW>(.5, -.5, 0, 1);
 
-  auto face
-    = [this](const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
-             const GLVector<XYZW>& v3, const GLVector<XYZW>& v4) {
-        GLVector<XYZ> normal = (v2 - v1) % (v3 - v1);
+  auto face = [this](const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
+                     const GLVector<XYZW>& v3, const GLVector<XYZW>& v4) {
+    GLVector<XYZ> normal = ((const GLVector<XYZ>)v2 - (const GLVector<XYZ>)v1)
+                           % ((const GLVector<XYZ>)v3 - (const GLVector<XYZ>)v1);
 
-        glBegin(GL_QUADS);
-        glNormal3dv(normal);
-        glVertex3dv(v1);
-        glVertex3dv(v2);
-        glVertex3dv(v3);
-        glVertex3dv(v4);
-        glEnd();
-      };
+    glBegin(GL_QUADS);
+    glNormal3dv(normal);
+    glVertex3dv(v1);
+    glVertex3dv(v2);
+    glVertex3dv(v3);
+    glVertex3dv(v4);
+    glEnd();
+  };
 
   calculate_current_angle();
 

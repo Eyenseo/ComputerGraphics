@@ -75,16 +75,16 @@ void Physic::collision(SphereBB& a, SphereBB& b) {
         *b.origin_ += half_intersection;
       } else if(a.hitable_->is_moveable()) {
         // Mirror speed
-        a.hitable_->speed_ -= 2 * (a.hitable_->speed_ * n) * n;
+        a.hitable_->speed_ -= 2 * (n * (n * a.hitable_->speed_));
 
         // Move object out of the unmoveable one
-        *a.origin_ -= (distance - n * b.radius_ - n * a.radius_);
+        *a.origin_ += (distance - (n * b.radius_) - (n * a.radius_));
       } else if(b.hitable_->is_moveable()) {
         // Mirror speed
-        b.hitable_->speed_ -= 2 * (b.hitable_->speed_ * n) * n;
+        b.hitable_->speed_ -= 2 * (n * (n * b.hitable_->speed_));
 
         // Move object out of the unmoveable one
-        *b.origin_ += (distance - n * b.radius_ - n * a.radius_);
+        *b.origin_ += (distance - (n * b.radius_) - (n * a.radius_));
       }
     }
   }
@@ -139,16 +139,16 @@ void Physic::collision(SphereBB& a, OBB& b) {
       *b.origin_ -= half_intersection;
     } else if(a.hitable_->is_moveable()) {
       // Mirror speed
-      a.hitable_->speed_ -= 2 * (a.hitable_->speed_ * n) * n;
+      a.hitable_->speed_ -= 2 * (n * (n * a.hitable_->speed_));
 
       // Move object out of the unmoveable one
-      *a.origin_ += (distance - n * a.radius_);
+      *a.origin_ += (distance - (n * a.radius_));
     } else if(b.hitable_->is_moveable()) {
       // Mirror speed
-      b.hitable_->speed_ -= 2 * (b.hitable_->speed_ * n) * n;
+      b.hitable_->speed_ -= 2 * (n * (n * b.hitable_->speed_));
 
       // Move object out of the unmoveable one
-      *b.origin_ -= (distance - n * a.radius_);
+      *b.origin_ += (distance - (n * a.radius_));
     }
   }
 }

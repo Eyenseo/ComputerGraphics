@@ -364,7 +364,8 @@ void Table::draw() {
 
 void Table::face(const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
                  const GLVector<XYZW>& v3, const GLVector<XYZW>& v4) {
-  GLVector<XYZ> normal = (v2 - v1) % (v3 - v1);
+  GLVector<XYZ> normal = (const GLVector<XYZ>)(v2 - v1)
+                         % (const GLVector<XYZ>)(v3 - v1);
 
   // glBegin(GL_LINE_STRIP);
   glBegin(GL_QUADS);

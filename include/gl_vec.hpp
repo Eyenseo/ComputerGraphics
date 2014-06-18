@@ -31,16 +31,6 @@ public:
     }
   }
 
-  explicit GLVector(const double* copy)
-    : type_(T),
-    vec_(new GLdouble[type_]) {
-    assert(sizeof *copy / sizeof(GLdouble) == type_);
-
-    for(int i = 0; i < type_; ++i) {
-      vec_[i] = copy[i];
-    }
-  }
-
   GLVector(const GLVector& rhs)
     : type_(T),
     vec_(new GLdouble[type_]) {
@@ -263,10 +253,16 @@ public:
     return vec_;
   }
 
-  template<GLVectorType U = T, typename
-             = typename std::enable_if<U == XYZW>::type>
   operator GLVector<XYZ>() const {
     return GLVector<XYZ>(vec_[0], vec_[1], vec_[2]);
+  }
+
+  operator GLVector<XYZW>() const {
+    if(T == XYZ) {
+      return GLVector<XYZW>(vec_[0], vec_[1], vec_[2], 0);
+    } else {
+      return GLVector<XYZW>(vec_[0], vec_[1], vec_[2], vec_[3]);
+    }
   }
 
   // dot product ////////////////////////////////////////////////
@@ -285,7 +281,7 @@ public:
 
   // cross product //////////////////////////////////////////////
   template<GLVectorType U = T, typename
-             = typename std::enable_if<U == XYZW>::type>
+             = typename std::enable_if<U == XYZ>::type>
   inline friend GLVector<XYZ>operator%(const GLVector& lhs,
                                        const GLVector& rhs) {
     GLVector ret;

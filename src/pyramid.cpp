@@ -19,18 +19,18 @@ void Pyramid::draw() {
   GLVector<XYZW> base_bottom_right = GLVector<XYZW>(.5, -.5, 0, 1);
   GLVector<XYZW> top = GLVector<XYZW>(0, 0, 2, 1);
 
-  auto face
-    = [](const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
-         const GLVector<XYZW>& v3) {
-        GLVector<XYZ> normal = (v2 - v1) % (v3 - v1);
+  auto face = [](const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
+                 const GLVector<XYZW>& v3) {
+    GLVector<XYZ> normal = (const GLVector<XYZ>)(v2 - v1)
+                           % (const GLVector<XYZ>)(v3 - v1);
 
-        normal.Normalize();
+    normal.Normalize();
 
-        glNormal3dv(normal.get_vector());
-        glVertex3dv(v1.get_vector());
-        glVertex3dv(v2.get_vector());
-        glVertex3dv(v3.get_vector());
-      };
+    glNormal3dv(normal.get_vector());
+    glVertex3dv(v1.get_vector());
+    glVertex3dv(v2.get_vector());
+    glVertex3dv(v3.get_vector());
+  };
 
   set_material_color(1, 0);
 

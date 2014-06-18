@@ -25,8 +25,8 @@ Sphere::~Sphere() {
 void Sphere::step() {
    if(moveable_) {
     //TODO review slow speeds are a problem on edges
-     speed_ += GLVector<XYZW>::ZVec * -9.81 * 0.0000016 + (speed_ * -fraction_);
-     origin_ +=  speed_ * 0.016;
+     speed_ += GLVector<XYZW>::ZVec * -9.81 * 0.016666 + (speed_ * -fraction_);
+     origin_ +=  speed_ * 0.016666;
   }
 }
 

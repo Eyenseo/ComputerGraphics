@@ -2,27 +2,16 @@
 #define HITABLE_HPP
 
 #include <forward_list>
-#include <thread>
-#include <mutex>
-#include <atomic>
-#include <unistd.h>
-#include <chrono>
 
 #include "gl_vec.hpp"
 #include "bounding_box.hpp"
 #include "physic.hpp"
-#include "timer.hpp"
 
 class Hitable {
   friend Physic;
 
-  std::atomic<bool> end_;
-
 protected:
   std::forward_list<BoundingBox*> bounding_box_list_;
-  std::mutex m_;
-  Physic* phy_;
-  std::thread* col_t_;
 
   GLVector<XYZW> speed_;
   double fraction_ = 0.0035;
@@ -31,10 +20,7 @@ protected:
 
 public:
   Hitable()
-      : end_(false)
-      , phy_(nullptr)
-      , col_t_(nullptr)
-      , moveable_(true)
+      : moveable_(true)
       , hitable_(true) {
   }
 
@@ -42,41 +28,6 @@ public:
   }
 
   virtual void step() = 0;
-
-  void start(Physic* phy) {
-    if(col_t_ != nullptr) {
-      end_ = true;
-      col_t_->join();
-      delete col_t_;
-      col_t_ = nullptr;
-      end_ = false;
-    }
-
-    phy_ = phy;
-
-    col_t_ = new std::thread([this]() {
-      if(phy_ != nullptr) {
-        Timer t;
-        while(!end_) {
-          t.reset();
-          step();
-          phy_->collision(this);
-          std::this_thread::sleep_for(
-              std::chrono::milliseconds((int)(16.666 - t.elapsed())));
-        }
-      }
-    });
-  }
-
-  void stop() {
-    if(col_t_ != nullptr) {
-      end_ = true;
-      col_t_->join();
-      delete col_t_;
-      col_t_ = nullptr;
-      end_ = false;
-    }
-  }
 
   void add_speed(const GLVector<XYZW>& add) {
     speed_ += add;

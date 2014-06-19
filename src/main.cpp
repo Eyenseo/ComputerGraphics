@@ -361,7 +361,7 @@ void make_objects() {
   objects_.push_front(temp);
   hitables_.push_front((Sphere*)temp);
 
-  for(unsigned int i = 0; i < 3; ++i) {
+  for(unsigned int i = 0; i < 6; ++i) {
     switch(i % 3) {
     case 0:
       dif_x += 1.1;
@@ -555,10 +555,7 @@ int main() {
 
   make_objects();
   Physic phy(&hitables_);
-
-  for(auto& h : hitables_) {
-    h->start(&phy);
-  }
+  phy.start();
 
   while(!glfwWindowShouldClose(window)) {
     init_view();
@@ -575,9 +572,7 @@ int main() {
     glfwPollEvents();
   }
 
-  for(auto& h : hitables_) {
-    h->stop();
-  }
+  phy.stop();
 
   glfwTerminate();
 

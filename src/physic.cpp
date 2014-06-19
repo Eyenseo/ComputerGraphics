@@ -2,39 +2,47 @@
 #include "include/hitable.hpp"
 
 Physic::Physic()
-    : hitables_(nullptr) {
+    : hitables_(nullptr)
+    , col_t_(nullptr)
+    , end_(false) {
 }
 
 Physic::Physic(std::forward_list<Hitable*>* hitables)
-    : hitables_(hitables) {
+    : hitables_(hitables)
+    , col_t_(nullptr)
+    , end_(false) {
 }
 
 Physic::~Physic() {
 }
 
-void Physic::collision(Hitable* h) {
-  if(h->is_hitable()) {
-    for(auto& hitable : *hitables_) {
-      if(h != hitable && hitable->is_hitable()) {
-        std::unique_lock<std::mutex>(hitable->m_);
+void Physic::collision() {
+  using Inter = std::forward_list<Hitable*>::iterator;
+  const Inter end = hitables_->end();
 
-        for(auto& other_box : hitable->bounding_box_list_) {
-          SphereBB* s1 = dynamic_cast<SphereBB*>(other_box);
-          OBB* o1 = (s1 == nullptr) ? dynamic_cast<OBB*>(other_box) : nullptr;
-          std::unique_lock<std::mutex>(h->m_);
+  for(Inter i = hitables_->begin(); i != end; ++i) {
+    (*i)->step();
 
-          for(auto& h_box : h->bounding_box_list_) {
-            SphereBB* s2 = dynamic_cast<SphereBB*>(h_box);
-            OBB* o2 = (s2 == nullptr) ? dynamic_cast<OBB*>(h_box) : nullptr;
+    if((*i)->is_hitable()) {
+      for(Inter j = std::next(i, 1); j != end; ++j) {
+        if((*j)->is_hitable()) {
+          for(auto& other_box : (*j)->bounding_box_list_) {
+            SphereBB* s1 = dynamic_cast<SphereBB*>(other_box);
+            OBB* o1 = (s1 == nullptr) ? dynamic_cast<OBB*>(other_box) : nullptr;
 
-            if(s1 != nullptr && s2 != nullptr) {
-              collision(*s1, *s2);
-            } else if(o1 != nullptr && o2 != nullptr) {
-              collision(*o1, *o2);
-            } else if(s1 != nullptr && o2 != nullptr) {
-              collision(*s1, *o2);
-            } else {
-              collision(*s2, *o1);
+            for(auto& h_box : (*i)->bounding_box_list_) {
+              SphereBB* s2 = dynamic_cast<SphereBB*>(h_box);
+              OBB* o2 = (s2 == nullptr) ? dynamic_cast<OBB*>(h_box) : nullptr;
+
+              if(s1 != nullptr && s2 != nullptr) {
+                collision(*s1, *s2);
+              } else if(o1 != nullptr && o2 != nullptr) {
+                collision(*o1, *o2);
+              } else if(s1 != nullptr && o2 != nullptr) {
+                collision(*s1, *o2);
+              } else {
+                collision(*s2, *o1);
+              }
             }
           }
         }
@@ -78,7 +86,7 @@ void Physic::collision(SphereBB& a, SphereBB& b) {
         a.hitable_->speed_ -= 2 * (n * (n * a.hitable_->speed_));
 
         // Move object out of the unmoveable one
-        *a.origin_ += (distance - (n * b.radius_) - (n * a.radius_));
+        *a.origin_ -= (distance - (n * b.radius_) - (n * a.radius_));
       } else if(b.hitable_->is_moveable()) {
         // Mirror speed
         b.hitable_->speed_ -= 2 * (n * (n * b.hitable_->speed_));
@@ -158,4 +166,34 @@ void Physic::collision(OBB& a, SphereBB& b) {
 }
 
 void Physic::collision(OBB& a, OBB& b) {
+}
+
+void Physic::start() {
+  if(col_t_ != nullptr) {
+    end_ = true;
+    col_t_->join();
+    delete col_t_;
+    col_t_ = nullptr;
+    end_ = false;
+  }
+
+  col_t_ = new std::thread([this]() {
+    Timer t;
+    while(!end_) {
+      t.reset();
+      collision();
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds((int)(16.666 - t.elapsed())));
+    }
+  });
+}
+
+void Physic::stop() {
+  if(col_t_ != nullptr) {
+    end_ = true;
+    col_t_->join();
+    delete col_t_;
+    col_t_ = nullptr;
+    end_ = false;
+  }
 }

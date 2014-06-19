@@ -470,7 +470,7 @@ void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
                 const GLVector<XYZW>& b) {
   if(speed_button_pressed_ && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
     // This prevents clipping with the near plane
-    static const GLVector<XYZW> clip = GLVector<XYZW>::ZVec * 0.000001;
+    static const GLVector<XYZW> clip = GLVector<XYZW>::ZVec * 0.0001;
 
     glDisable(GL_LIGHTING);
     glColor3f(1, 0, 0);

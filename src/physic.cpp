@@ -183,7 +183,7 @@ void Physic::start() {
       t.reset();
       collision();
       std::this_thread::sleep_for(
-          std::chrono::milliseconds((int)(16.666 - t.elapsed())));
+          std::chrono::nanoseconds((int)(16666666 - t.elapsed() * 1000000)));
     }
   });
 }

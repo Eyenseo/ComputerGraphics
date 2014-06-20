@@ -275,3 +275,6 @@ double Drawable::get_scale_z() const {
 void Drawable::set_scale_z(double scale_z) {
   scale_[2] = scale_z;
 }
+void Drawable::set_Image(GLuint image_){
+	image = image_;
+}

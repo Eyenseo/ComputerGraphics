@@ -13,6 +13,7 @@ protected:
   GLVector<XYZW> origin_;
   GLVector<XYZ>  rotation_;
   GLVector<XYZ>  scale_;
+  GLMatrix model_view;
   double*  color_;
   unsigned char colors_;
 
@@ -28,6 +29,7 @@ protected:
                    double z_distance) const;
 
 public:
+	GLuint image;
 
   virtual void                draw() = 0;
 
@@ -86,5 +88,7 @@ public:
 
   virtual double              get_scale_z() const;
   virtual void                set_scale_z(double scale_z);
+
+  virtual void 				  set_Image(GLuint image);
 };
 #endif // ifndef DRAWABLE_HPP

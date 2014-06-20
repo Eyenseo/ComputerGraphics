@@ -291,11 +291,10 @@ void init_view() {
  * The function will initialise the lighting
  */
 void init_lighting() {
-  GLfloat ambient[] = {2.75, 2.75, 2.75, 1};
-  GLfloat white_color[] = {1.5, 1.5, 1.5, 1};
+  GLfloat ambient[] = {4.75, 4.75, 4.75, 1};
+  GLfloat white_color[] = {.25, .25, .25, 1};
 
   GLfloat pos_1[] = {15, 15, 13, 1};
-  GLfloat pos_2[] = {-25, -25, 23, 1};
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
@@ -305,15 +304,13 @@ void init_lighting() {
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
   glEnable(GL_LIGHTING);
 
-  glLightfv(GL_LIGHT1, GL_POSITION, pos_1);
-  glLightfv(GL_LIGHT1, GL_DIFFUSE, white_color);
-  glLightfv(GL_LIGHT1, GL_SPECULAR, white_color);
-  glEnable(GL_LIGHT1);
-
-  glLightfv(GL_LIGHT2, GL_POSITION, pos_2);
-  glLightfv(GL_LIGHT2, GL_DIFFUSE, white_color);
-  glLightfv(GL_LIGHT2, GL_SPECULAR, white_color);
-  glEnable(GL_LIGHT2);
+  glLightfv(GL_LIGHT0, GL_POSITION, pos_1);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, white_color);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, white_color);
+  glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, .0f);
+  glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, .0f);
+  glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0002);
+  glEnable(GL_LIGHT0);
 }
 
 /**
@@ -361,7 +358,7 @@ void make_objects() {
   objects_.push_front(temp);
   hitables_.push_front((Sphere*)temp);
 
-  for(unsigned int i = 0; i < 6; ++i) {
+  for(unsigned int i = 0; i < 10; ++i) {
     switch(i % 3) {
     case 0:
       dif_x += 1.1;

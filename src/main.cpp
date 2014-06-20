@@ -17,13 +17,12 @@
 
 #include "include/physic.hpp"
 
-GLFWwindow* window = NULL;
-
-
-static std::forward_list<std::function<void(int, int)>> key_callbacks_;
-static std::forward_list < std::function < void(int, int) >> mouse_callbacks_;
+static std::forward_list<std::function<void(int, int, int)>> key_callbacks_;
+static std::forward_list<std::function<void(
+    unsigned int, unsigned int, unsigned int, unsigned int)>> mouse_callbacks_;
 static std::forward_list<Drawable*> objects_;
 static std::forward_list<Hitable*> hitables_;
+static std::forward_list<Button*> buttons_;
 
 static double window_width_ = 1024;
 static double window_height_ = 768;
@@ -38,22 +37,17 @@ static double global_z_translation_prev_ = global_z_translation_;
 static double global_x_rotation_ = 0;
 static double global_y_rotation_ = 0;
 static double global_z_rotation_ = 0;
-static double global_x_pos = 0;
-static double global_y_pos = 0;
 
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-GLVector<XYZW> global_mouse_press;
 
 static double mouse_divider_ = 0.35;
-static bool speed_button_pressed_ = false, push = false;
+static bool speed_button_pressed_ = false;
 
 static Table* table;
 static Sphere* interactive;
-static std::vector<Button*> buttons_;
-
-GLuint image;
+static Sphere* selected_;
 
 /**
  * Function taken from http://r3dux.org/2012/07/a-simple-glfw-fps-counter/
@@ -126,7 +120,7 @@ double calcFPS(double time_interval = 1.0, GLFWwindow* window = NULL,
  * @param x_offset x offset of the mouse wheel - either +1 or -1
  * @param y_offset y offset of the mouse wheel - either +1 or -1
  */
-void mouse_scroll_callback(GLFWwindow* window, double x_offset,
+void mouse_scroll_callback(GLFWwindow* /*window*/, double /*x_offset*/,
                            double y_offset) {
   global_z_translation_ += y_offset / 4.0;
 }
@@ -143,12 +137,11 @@ void mouse_scroll_callback(GLFWwindow* window, double x_offset,
  * @param mods     Will hold Bit field that describes which modifier keys were
  *                 held down.
  */
-void key_callback(GLFWwindow* window, int key, int scancode, int action,
+void key_callback(GLFWwindow* /*window*/, int key, int /*scancode*/, int action,
                   int mods) {
   // std::cout << key << std::endl;
-
   for(auto fun : key_callbacks_) {
-    fun(key, action);
+    fun(key, action, mods);
   }
 }
 
@@ -193,27 +186,218 @@ void mouse_position_callback(GLFWwindow* window, double x_pos, double y_pos) {
  *               held down.
  */
 void mouse_button_callback(GLFWwindow* window, int button, int action,
-                           int mods) {
-	//mouse callbacks
-	for(auto fun : mouse_callbacks_) {
-		    fun(button, action);
-		  }
-  if(button == 0) {
-    if(action == GLFW_PRESS) {
-      double x_pos, y_pos;
+                           int /*mods*/) {
+  double x, y;
+  glfwGetCursorPos(window, &x, &y);
+  for(auto fun : mouse_callbacks_) {
+    fun(button, action, x, y);
+  }
+}
 
+/**
+ * Control newly created Objects via:
+ *   Movement:
+ *     w x-axis +
+ *     s x-axis -
+ *     d y-axis +
+ *     a y-axis -
+ *     e z-axis +
+ *     q z-axis -
+ *   Scale:
+ *     r x-axis +
+ *     R x-axis -
+ *     f y-axis +
+ *     F y-axis -
+ *     v z-axis +
+ *     V z-axis -
+ *   Rotate:
+ *     t x-axis +
+ *     T x-axis -
+ *     g y-axis +
+ *     G y-axis -
+ *     b z-axis +
+ *     B z-axis -
+ *
+ *   Stop Sphere from moving:
+ *     m
+ */
+void selected_callback() {
+  // Moveable
+  key_callbacks_.push_front([&](int key, int action, int) {
+    if(selected_ != nullptr && (GLFW_KEY_M == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+
+      Hitable* hitable = dynamic_cast<Hitable*>(selected_);
+      if(hitable != nullptr && dynamic_cast<Sphere*>(hitable) != nullptr) {
+        hitable->set_moveable(!hitable->is_moveable());
+        hitable->set_speed(GLVector<XYZW>::NVec);
+      }
+    }
+  });
+
+  // Movement
+  key_callbacks_.push_front([&](int key, int action, int) {
+    if(selected_ != nullptr && (GLFW_KEY_W == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      selected_->set_origin_y(selected_->get_origin_y() + .05);
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int) {
+    if(selected_ != nullptr && (GLFW_KEY_A == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      selected_->set_origin_x(selected_->get_origin_x() - .05);
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int) {
+    if(selected_ != nullptr && (GLFW_KEY_S == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      selected_->set_origin_y(selected_->get_origin_y() - .05);
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int) {
+    if(selected_ != nullptr && (GLFW_KEY_D == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      selected_->set_origin_x(selected_->get_origin_x() + .05);
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int) {
+    if(selected_ != nullptr && (GLFW_KEY_E == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      selected_->set_origin_z(selected_->get_origin_z() + .05);
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int) {
+    if(selected_ != nullptr && (GLFW_KEY_Q == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      selected_->set_origin_z(selected_->get_origin_z() - .05);
+    }
+  });
+
+  // Scale
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_R == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier == GLFW_MOD_SHIFT) {
+        selected_->set_scale_y(selected_->get_scale_y() + .05);
+      } else {
+        double scale_y = selected_->get_scale_y();
+        if(scale_y > .25) {
+          selected_->set_scale_y(scale_y - .05);
+        }
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_F == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier == GLFW_MOD_SHIFT) {
+        selected_->set_scale_y(selected_->get_scale_y() + .05);
+      } else {
+        double scale_y = selected_->get_scale_y();
+        if(scale_y > .25) {
+          selected_->set_scale_y(scale_y - .05);
+        }
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_V == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier == GLFW_MOD_SHIFT) {
+        selected_->set_scale_y(selected_->get_scale_y() + .05);
+      } else {
+        double scale_y = selected_->get_scale_y();
+        if(scale_y > .25) {
+          selected_->set_scale_y(scale_y - .05);
+        }
+      }
+    }
+  });
+
+  // Rotate
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_T == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier == GLFW_MOD_SHIFT) {
+        selected_->set_rotation_y(selected_->get_rotation_y() + .5);
+      } else {
+        selected_->set_rotation_y(selected_->get_rotation_y() - .5);
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_G == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier == GLFW_MOD_SHIFT) {
+        selected_->set_rotation_y(selected_->get_rotation_y() + .5);
+      } else {
+        selected_->set_rotation_y(selected_->get_rotation_y() - .5);
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_B == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier == GLFW_MOD_SHIFT) {
+        selected_->set_rotation_y(selected_->get_rotation_y() + .5);
+      } else {
+        selected_->set_rotation_y(selected_->get_rotation_y() - .5);
+      }
+    }
+  });
+}
+
+void register_callbacks(GLFWwindow* window) {
+  //  The function will update the previous values of the global rotation if the
+  //  CTRL-key is no longer pressed and the mouse position to prevent jumping.
+  //  If the CTRL-KEy is pressed it will update the translation values.
+  key_callbacks_.push_front([window](int key, int action, int) {
+    if(key == 340) {
+      double x_pos, y_pos;
       glfwGetCursorPos(window, &x_pos, &y_pos);
 
       mouse_down_x_ = x_pos;
       mouse_down_y_ = y_pos;
 
-      // std::cout << "X: "<< x_pos << " Y: " << y_pos << std::endl;
-    } else {
-      global_x_translation_prev_ = global_x_translation_;
-      global_y_translation_prev_ = global_y_translation_;
-      global_z_translation_prev_ = global_z_translation_;
+      if((action == GLFW_PRESS)
+         && (glfwGetMouseButton(window, 0) == GLFW_PRESS)) {
+        global_x_translation_prev_ = global_x_translation_;
+        global_y_translation_prev_ = global_y_translation_;
+        global_z_translation_prev_ = global_z_translation_;
+      }
     }
-  }
+  });
+  key_callbacks_.push_front([window](int key, int, int) {
+    if((GLFW_KEY_ESCAPE == key)) {
+      glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+  });
+
+  mouse_callbacks_.push_front([window](int button, int action, unsigned int x,
+                                       unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        mouse_down_x_ = x;
+        mouse_down_y_ = y;
+      } else if(action == GLFW_RELEASE) {
+        global_x_translation_prev_ = global_x_translation_;
+        global_y_translation_prev_ = global_y_translation_;
+        global_z_translation_prev_ = global_z_translation_;
+      }
+    }
+  });
+  mouse_callbacks_.push_front([window](int button, int action, unsigned int,
+                                       unsigned int) {
+    if(button == 0) {
+      if(action == GLFW_RELEASE) {
+        for(auto button : buttons_) {
+          button->set_pressed(false);
+        }
+      }
+    }
+  });
+
+  selected_callback();
 }
 
 /**
@@ -241,33 +425,9 @@ int init_glfw(GLFWwindow*& window) {
   glfwSetCursorPosCallback(window, &mouse_position_callback);
   glfwSetScrollCallback(window, &mouse_scroll_callback);
   glfwSetMouseButtonCallback(window, &mouse_button_callback);
-
   glfwSetKeyCallback(window, &key_callback);
 
-  // TODO clean up - make a system that will make all callbacks on
-  // initialisation
-
-  /*
-   * The function will update the previous values of the global rotation if the
-   * CTRL-key is no longer pressed and the mouse position to prevent jumping.
-   * If the CTRL-KEy is pressed it will update the translation values.
-   */
-  key_callbacks_.push_front([window](int event, int action) {
-    if(event == 340) {
-      double x_pos, y_pos;
-      glfwGetCursorPos(window, &x_pos, &y_pos);
-
-      mouse_down_x_ = x_pos;
-      mouse_down_y_ = y_pos;
-
-      if((action == GLFW_PRESS)
-         && (glfwGetMouseButton(window, 0) == GLFW_PRESS)) {
-        global_x_translation_prev_ = global_x_translation_;
-        global_y_translation_prev_ = global_y_translation_;
-        global_z_translation_prev_ = global_z_translation_;
-      }
-    }
-  });
+  register_callbacks(window);
 
   return 0;
 }
@@ -284,17 +444,15 @@ void init_view() {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  // glOrtho(-15, 15, -10, 10, -20, 20);
   glFrustum(-.5, .5, -.5, .5, 1, 200);
 
   // Reset modelview
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  glPushMatrix();
-
   // Apply gobal movement
-  glTranslated(global_x_translation_, global_y_translation_,global_z_translation_);
+  glTranslated(global_x_translation_, global_y_translation_,
+               global_z_translation_);
 
   // Apply global rotation
   glRotated(global_x_rotation_, 1, 0, 0);
@@ -340,36 +498,6 @@ void make_objects() {
   temp = new Sphere(dif_x, dif_y, 6.61);
   interactive = dynamic_cast<Sphere*>(temp);
   temp->set_color(.7, .7, .7, 0);
-  key_callbacks_.push_front([temp](int key, int action) {
-    if((GLFW_KEY_W == key) && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      temp->set_origin_y(temp->get_origin_y() + .05);
-    }
-  });
-  key_callbacks_.push_front([temp](int key, int action) {
-    if((GLFW_KEY_A == key) && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      temp->set_origin_x(temp->get_origin_x() - .05);
-    }
-  });
-  key_callbacks_.push_front([temp](int key, int action) {
-    if((GLFW_KEY_S == key) && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      temp->set_origin_y(temp->get_origin_y() - .05);
-    }
-  });
-  key_callbacks_.push_front([temp](int key, int action) {
-    if((GLFW_KEY_D == key) && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      temp->set_origin_x(temp->get_origin_x() + .05);
-    }
-  });
-  key_callbacks_.push_front([temp](int key, int action) {
-    if((GLFW_KEY_Q == key) && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      temp->set_origin_z(temp->get_origin_z() + .05);
-    }
-  });
-  key_callbacks_.push_front([temp](int key, int action) {
-    if((GLFW_KEY_E == key) && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      temp->set_origin_z(temp->get_origin_z() - .05);
-    }
-  });
   objects_.push_front(temp);
   hitables_.push_front((Sphere*)temp);
 
@@ -447,6 +575,78 @@ void make_objects() {
   (*hitables_.begin())->set_moveable(false);
 }
 
+void make_buttons(GLFWwindow*& window) {
+  Button* temp = nullptr;
+
+  temp = new Button(0, 0, "./img/new.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_release([temp]() {
+    for(auto object : objects_) {
+      delete object;
+    }
+    objects_.clear();
+    hitables_.clear();
+    make_objects();
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_release(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 64, "./img/Kugel.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_release([temp]() {
+    // TODO use modelview to get a better position
+    Sphere* s = new Sphere(0, 0, 7);
+    objects_.push_front(s);
+    hitables_.push_front(s);
+    selected_ = s;
+
+    temp->set_color(0, 0, 1, 0);
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_release(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 128, "./img/exit.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_release([temp, window]() {
+    glfwSetWindowShouldClose(window, GL_TRUE);
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS || action == GLFW_REPEAT) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_release(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+}
+
 /**
  * The function will call the draw method from all drawable objects
  */
@@ -456,9 +656,9 @@ void draw() {
   }
 }
 
-void drawButton() {
-  for(auto drawable: buttons_) {
-    drawable->draw();
+void drawButtons() {
+  for(auto button : buttons_) {
+    button->draw();
   }
 }
 
@@ -488,7 +688,9 @@ void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
                 const GLVector<XYZW>& b) {
   if(speed_button_pressed_ && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
     // This prevents clipping with the near plane
-    static const GLVector<XYZW> clip = GLVector<XYZW>::ZVec * 0.000001;
+    GLMatrix model;
+    glGetDoublev(GL_MODELVIEW_MATRIX, model);
+    const GLVector<XYZW> clip = model * GLVector<XYZW>::ZVec * 0.0001;
 
     glDisable(GL_LIGHTING);
     glColor3f(1, 0, 0);
@@ -505,48 +707,44 @@ void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
 }
 
 void mouse_interaction(GLFWwindow* window) {
+  // Retrieve model view matrix
+  GLMatrix model;
+  glGetDoublev(GL_MODELVIEW_MATRIX, model);
 
-    // Retrieve model view matrix
-    GLMatrix model;
-    glGetDoublev(GL_MODELVIEW_MATRIX, model);
+  // Retrieve projection matrix
+  GLMatrix projection;
+  glGetDoublev(GL_PROJECTION_MATRIX, projection);
 
-    // Retrieve projection matrix
-    GLMatrix projection;
-    glGetDoublev(GL_PROJECTION_MATRIX, projection);
+  GLMatrix mp = model.transpose() * projection.transpose();
 
-    GLMatrix mp = model.transpose() * projection.transpose();
+  if(mp.inverse()) {
+    // Retrieve current cursor position
+    double x_pos, y_pos;
+    glfwGetCursorPos(window, &x_pos, &y_pos);
 
-    if(mp.inverse()) {
-      // Retrieve current cursor position
-      double x_pos, y_pos;
-      glfwGetCursorPos(window, &x_pos, &y_pos);
-      global_x_pos = x_pos;
-      global_y_pos = y_pos;
+    // Build vector of old cursor position
+    GLVector<XYZW> mouse_press;
+    mouse_press[0] = mouse_down_x_;
+    mouse_press[1] = mouse_down_y_;
+    mouse_press[2] = 0;
 
-      // Build vector of old cursor position
-      GLVector<XYZW> mouse_press;
-      mouse_press[0] = mouse_down_x_;
-      mouse_press[1] = mouse_down_y_;
-      mouse_press[2] = 0;
+    // Build vector of current cursor position
+    GLVector<XYZW> mouse_current;
+    mouse_current[0] = x_pos;
+    mouse_current[1] = y_pos;
+    mouse_current[2] = 0;
 
-      // Build vector of current cursor position
-      GLVector<XYZW> mouse_current;
-      mouse_current[0] = x_pos;
-      mouse_current[1] = y_pos;
-      mouse_current[2] = 0;
-      std::cout<<"xpos: "<< x_pos<<"ypos: "<<y_pos<<std::endl;
+    // Retrieve viewport matrix
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
 
-      // Retrieve viewport matrix
-      GLint viewport[4];
-      glGetIntegerv(GL_VIEWPORT, viewport);
+    mouse_press = mouse_pos_to_world(mp, viewport, mouse_press);
+    mouse_current = mouse_pos_to_world(mp, viewport, mouse_current);
 
-      global_mouse_press = 10*(mouse_pos_to_world(projection, viewport, mouse_current));
-      mouse_press = mouse_pos_to_world(mp, viewport, mouse_press);
-      mouse_current = mouse_pos_to_world(mp, viewport, mouse_current);
-      if(speed_button_pressed_) {
+    if(speed_button_pressed_) {
       debug_line(window, mouse_press, mouse_current);
-      }
-      if(speed_button_pressed_ && glfwGetMouseButton(window, 0) != GLFW_PRESS) {
+
+      if(glfwGetMouseButton(window, 0) != GLFW_PRESS) {
         speed_button_pressed_ = false;
 
         GLVector<XYZW> direction_speed = (mouse_press - mouse_current)
@@ -555,248 +753,58 @@ void mouse_interaction(GLFWwindow* window) {
 
         interactive->add_speed(direction_speed / mouse_divider_);
       }
-
+    }
   }
 }
 
-GLuint loadBMP_custom(const char * imagepath){
-	// Data read from the header of the BMP file
-	unsigned char header[54]; // Each BMP file begins by a 54-bytes header
-	unsigned int dataPos;     // Position in the file where the actual data begins
-	unsigned int width, height;
-	unsigned int imageSize;   // = width*height*3
-	// Actual RGB data
-	unsigned char * data;
-
-	// Open the file
-	FILE * file = fopen(imagepath,"rb");
-	if (!file){
-		printf("Image could not be opened\n");
-		return 0;
-	}
-	if ( fread(header, 1, 54, file)!=54 ){ // If not 54 bytes read : problem
-	    printf("Not a correct BMP file\n");
-	    return false;
-	}
-	if ( header[0]!='B' || header[1]!='M' ){
-	    printf("Not a correct BMP file\n");
-	    return 0;
-	}
-
-	// Read ints from the byte array
-	dataPos    = *(int*)&(header[0x0A]);
-	imageSize  = *(int*)&(header[0x22]);
-	width      = *(int*)&(header[0x12]);
-	height     = *(int*)&(header[0x16]);
-
-	// Some BMP files are misformatted, guess missing information
-	if (imageSize==0)    imageSize=width*height*3; // 3 : one byte for each Red, Green and Blue component
-	if (dataPos==0)      dataPos=54; // The BMP header is done that way
-
-	// Create a buffer
-	data = new unsigned char [imageSize];
-
-	// Read the actual data from the file into the buffer
-	fread(data,1,imageSize,file);
-
-	//Everything is in memory now, the file can be closed
-	fclose(file);
-
-	// Create one OpenGL texture
-	GLuint textureID;
-	glGenTextures(1, &textureID);
-
-	glEnable(GL_TEXTURE_2D);
-	// "Bind" the newly created texture : all future texture functions will modify this texture
-	glBindTexture(GL_TEXTURE_2D, textureID);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-	// Give the image to OpenGL
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-	//glDisable(GL_TEXTURE_2D);
-
-	return textureID;
-}
-
-void startgame(){
-	Drawable* temp;
-	//static std::vector<Drawable*> oo;
-	std::cout << "X: "<< global_mouse_press[0] << " Y: " << global_mouse_press[1] << std::endl;
-	temp = new Sphere(global_mouse_press[0],global_mouse_press[1],5.6);
-	objects_.push_front(temp);
-	//oo.push_back(temp);
-	hitables_.push_front((Sphere*)temp);
-
-
-	  key_callbacks_.push_front(
-		[temp](int event, int) {
-		  if((GLFW_KEY_UP == event)) {
-			temp->set_origin_y(temp->get_origin_y() + .05);
-		  }
-		});
-	  key_callbacks_.push_front(
-		[temp](int event, int) {
-		  if((GLFW_KEY_LEFT == event)) {
-			temp->set_origin_x(temp->get_origin_x() - .05);
-		  }
-		});
-	  key_callbacks_.push_front(
-		[temp](int event, int) {
-		  if((GLFW_KEY_DOWN == event)) {
-			temp->set_origin_y(temp->get_origin_y() - .05);
-		  }
-		});
-	  key_callbacks_.push_front(
-		[temp](int event, int) {
-		  if((GLFW_KEY_RIGHT == event)) {
-			temp->set_origin_x(temp->get_origin_x() + .05);
-		  }
-		});
-}
-void makebutton(){
-	//bool push = false;
-	Drawable* temp;
-
-	image = loadBMP_custom("./img/Kugel.bmp");
-	temp = new Button(-8.95, 8.95, 5, 2);
-	temp->set_Image(image);
-	temp->set_color(0, 0, 1, 0);
-	//temp->set_scale(2,2,0);
-	objects_.push_front(temp);
-	//buttons_.push_back((Button*)temp);
-
-	std::cout << "Temp+: "<<(temp->get_origin_y()+temp->get_scale_y()) << "Temp-: "<< (temp->get_origin_y()-temp->get_scale_y())<<std::endl;
-	mouse_callbacks_.push_front([temp](int button, int action){
-		if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 1)){
-			if( global_x_pos >= 1 && global_x_pos <= 105 && global_y_pos >= 1 && global_y_pos <= 75){
-				//global_mouse_press[1] <= (temp->get_origin_y()+temp->get_scale_y()) && global_mouse_press[1] >= (temp->get_origin_y())
-				//global_x_pos >= 1 && global_x_pos <= 105 && global_y_pos >= 1 && global_y_pos <= 75
-				//global_mouse_press[0] <= (temp->get_origin_x()+temp->get_scale_x()) && global_mouse_press[0] <= (temp->get_origin_x()+temp->get_scale_x())
-				temp->set_color(1, 0, 0, 0);
-				push = true;
-			}
-		}else if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 0)){
-			if(push == true){
-				startgame();
-			}
-			push = false;
-			temp->set_color(0, 0, 1, 0);
-
-		}
-	});
-
-	image = loadBMP_custom("./img/new.bmp");
-	temp = new Button(-8.95, 6.8, 5, 2);
-	temp->set_Image(image);
-	temp->set_color(0, 0, 1, 0);
-	temp->set_scale(2,2,0);
-	objects_.push_front(temp);
-	//buttons_.push_back((Button*)temp);
-
-	mouse_callbacks_.push_front([temp](int button, int action){
-		if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 1)){
-			if(global_x_pos >= 1 && global_x_pos <= 105 && global_y_pos >= 80 && global_y_pos <= 155){
-				temp->set_color(1, 0, 0, 0);
-				//tempStart->set_origin_x(tempStart->get_origin_x()+0.5);
-			}
-		}else if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 0)){
-			if(global_x_pos >= 1 && global_x_pos <= 105 && global_y_pos >= 80 && global_y_pos <= 155){
-				temp->set_color(0, 0, 1, 0);
-				objects_.clear();
-				hitables_.clear();
-				make_objects();
-				makebutton();
-			}
-
-		}
-	});
-
-
-	image = loadBMP_custom("./img/option.bmp");
-	temp = new Button(-8.95, 4.6, 5, 2);
-	temp->set_Image(image);
-	temp->set_color(0, 0, 1, 0);
-	temp->set_scale(2,2,0);
-	objects_.push_front(temp);
-	//button = (Button*)temp;
-
-	mouse_callbacks_.push_front([temp](int button, int action){
-		if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 1)){
-			if(global_x_pos >= 1 && global_x_pos <= 105 && global_y_pos >= 160 && global_y_pos <= 235){
-				temp->set_color(1, 0, 0, 0);
-				//tempStart->set_origin_x(tempStart->get_origin_x()+0.5);
-			}
-		}else if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 0)){
-			temp->set_color(0, 0, 1, 0);
-		}
-	});
-
-
-	image = loadBMP_custom("./img/exit.bmp");
-	temp = new Button(-8.95,  2.4, 5, 2);
-	temp->set_Image(image);
-	temp->set_color(0, 0, 1, 0);
-	temp->set_scale(2,2,0);
-	objects_.push_front(temp);
-	//button = (Button*)temp;
-
-	mouse_callbacks_.push_front([temp](int button, int action){
-		if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 1)){
-			if(global_x_pos >= 1 && global_x_pos <= 105 && global_y_pos >= 245 && global_y_pos <= 320){
-				temp->set_color(1, 0, 0, 0);
-				//tempStart->set_origin_x(tempStart->get_origin_x()+0.5);
-
-			}
-		}else if((GLFW_MOUSE_BUTTON_LEFT == button) && (action == 0)){
-			if(global_x_pos >= 1 && global_x_pos <= 105 && global_y_pos >= 245 && global_y_pos <= 320){
-				glfwSetWindowShouldClose(window, GL_TRUE);
-			}
-			temp->set_color(0, 0, 1, 0);
-		}
-	});
-
-
-
-}
-
-
 int main() {
-  //GLFWwindow* window = NULL;
+  GLFWwindow* window = nullptr;
   int error = 0;
 
-  printf("Here we go!\n");
+  printf("Here we go!\n\n\
+Control newly created Objects via:\n\
+  Movement:\n\
+    w x-axis +\n\
+    s x-axis -\n\
+    d y-axis +\n\
+    a y-axis -\n\
+    e z-axis +\n\
+    q z-axis -\n\
+  Scale:\n\
+    r x-axis +\n\
+    R x-axis -\n\
+    f y-axis +\n\
+    F y-axis -\n\
+    v z-axis +\n\
+    V z-axis -\n\
+  Rotate:\n\
+    t x-axis +\n\
+    T x-axis -\n\
+    g y-axis +\n\
+    G y-axis -\n\
+    b z-axis +\n\
+    B z-axis -\n\
+\n\
+  Stop Sphere from moving:\n\
+    m\n");
 
   if((error = init_glfw(window)) != 0) {
     return error;
   }
 
-  key_callbacks_.push_front([window](int key, int) {
-    if((GLFW_KEY_ESCAPE == key)) {
-      glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-  });
-
   make_objects();
-  glPushMatrix();
-  makebutton();
-  glPopMatrix();
+  make_buttons(window);
+
   Physic phy(&hitables_);
   phy.start();
 
   while(!glfwWindowShouldClose(window)) {
     init_view();
     init_lighting();
+
     draw();
-    //drawButton();
-
+    drawButtons();
     mouse_interaction(window);
-
-    glPopMatrix();
 
     calcFPS(1, window, "Simple 3D Animation");
 
@@ -807,6 +815,13 @@ int main() {
   phy.stop();
 
   glfwTerminate();
+
+  for(auto object : objects_) {
+    delete object;
+  }
+  for(auto button : buttons_) {
+    delete button;
+  }
 
   printf("Goodbye!\n");
 

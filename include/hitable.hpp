@@ -33,6 +33,14 @@ public:
     speed_ += add;
   }
 
+  void set_speed(const GLVector<XYZW>& speed) {
+    speed_ = speed;
+  }
+
+  GLVector<XYZW> get_speed() {
+    return speed_;
+  }
+
   void add_bounding_box(BoundingBox* bb) {
     bounding_box_list_.push_front(bb);
   }

@@ -741,7 +741,7 @@ void makebutton(){
 
 
 	image = loadBMP_custom("./img/exit.bmp");
-	temp = new Button(-8.95, 8.95, 5, 2);
+	temp = new Button(-8.95,  2.4, 5, 2);
 	temp->set_Image(image);
 	temp->set_color(0, 0, 1, 0);
 	temp->set_scale(2,2,0);

@@ -1,3 +1,4 @@
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <forward_list>
 #include <functional>
@@ -421,6 +422,8 @@ int init_glfw(GLFWwindow*& window) {
   }
 
   glfwMakeContextCurrent(window);
+  glewExperimental = GL_TRUE;
+  glewInit();
 
   glfwSetCursorPosCallback(window, &mouse_position_callback);
   glfwSetScrollCallback(window, &mouse_scroll_callback);
@@ -446,10 +449,6 @@ void init_view() {
 
   glFrustum(-.5, .5, -.5, .5, 1, 200);
 
-  // Reset modelview
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
   // Apply gobal movement
   glTranslated(global_x_translation_, global_y_translation_,
                global_z_translation_);
@@ -458,6 +457,10 @@ void init_view() {
   glRotated(global_x_rotation_, 1, 0, 0);
   glRotated(global_y_rotation_, 0, 1, 0);
   glRotated(global_z_rotation_, 0, 0, 1);
+
+  // Reset modelview
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 }
 
 /**
@@ -467,23 +470,35 @@ void init_lighting() {
   GLfloat ambient[] = {4.75, 4.75, 4.75, 1};
   GLfloat white_color[] = {.25, .25, .25, 1};
 
-  GLfloat pos_1[] = {15, 15, 13, 1};
+  GLfloat pos_0[] = {15, 15, 13, 1};
+  GLfloat pos_1[] = {0, 0, 50, 1};
+  GLfloat pos_2[] = {15, 50, 15, 1};
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
 
-  glShadeModel(GL_SMOOTH);
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
   glEnable(GL_LIGHTING);
 
-  glLightfv(GL_LIGHT0, GL_POSITION, pos_1);
+  glLightfv(GL_LIGHT0, GL_POSITION, pos_0);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, white_color);
   glLightfv(GL_LIGHT0, GL_SPECULAR, white_color);
-  glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, .0f);
-  glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, .0f);
-  glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0002);
+  glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, .00f);
+  glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, .00f);
+  glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.00025);
   glEnable(GL_LIGHT0);
+
+  glLightfv(GL_LIGHT1, GL_POSITION, pos_1);
+  glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+  glEnable(GL_LIGHT1);
+
+  glLightfv(GL_LIGHT2, GL_POSITION, pos_2);
+  glLightfv(GL_LIGHT2, GL_DIFFUSE, white_color);
+  glLightfv(GL_LIGHT2, GL_SPECULAR, white_color);
+  glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, .00f);
+  glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, .00f);
+  glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.00045);
 }
 
 /**
@@ -495,23 +510,27 @@ void make_objects() {
   double dif_x = -4;
   double dif_y = -4;
 
+  // temp = new Sphere(0, 0, 0);
   temp = new Sphere(dif_x, dif_y, 6.61);
   interactive = dynamic_cast<Sphere*>(temp);
   temp->set_color(.7, .7, .7, 0);
   objects_.push_front(temp);
   hitables_.push_front((Sphere*)temp);
 
-  for(unsigned int i = 0; i < 6; ++i) {
+  for(unsigned int i = 0; i < 40; ++i) {
     switch(i % 3) {
     case 0:
       dif_x += 1.1;
+    // temp->set_color(i+40, i/2+40, i/2+40, 0);
       break;
     case 1:
       dif_x += 1.1;
+    // temp->set_color(i/2+40, i+40, i/2+40, 0);
       break;
     case 2:
       dif_x -= 1.1;
       dif_y += 1.1;
+    // temp->set_color(i/2+40, i/2+40, i+40, 0);
     }
     temp = new Sphere(dif_x, dif_y, 5.61);
     objects_.push_front(temp);
@@ -519,7 +538,7 @@ void make_objects() {
   }
   (*hitables_.begin())->set_moveable(false);
   ((Sphere*)*hitables_.begin())->set_color(123, 12, 12, 0);
-
+selected_ = ((Sphere*)*hitables_.begin());
   temp = new Cube(2, -2, 5.9);
   temp->set_color(213, 123, 34, 0);
   temp->set_rotation_x(45);
@@ -690,15 +709,21 @@ void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
     // This prevents clipping with the near plane
     GLMatrix model;
     glGetDoublev(GL_MODELVIEW_MATRIX, model);
-    const GLVector<XYZW> clip = model * GLVector<XYZW>::ZVec * 0.0001;
+
+    // Retrieve projection matrix
+    GLMatrix projection;
+    glGetDoublev(GL_PROJECTION_MATRIX, projection);
+
+    GLMatrix mp = model.transpose() * projection.transpose();
+    const GLVector<XYZW> clip = projection * GLVector<XYZW>::ZVec * 0.0001;
 
     glDisable(GL_LIGHTING);
     glColor3f(1, 0, 0);
     glLineWidth(4);
 
     glBegin(GL_LINES);
-    glVertex3dv(a - clip);
-    glVertex3dv(b - clip);
+    glVertex3dv(a + clip);
+    glVertex3dv(b + clip);
     glEnd();
 
     glLineWidth(1);

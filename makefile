@@ -9,9 +9,9 @@ inc = .
 
 debug = 1
 
-CFlags = -Wall -Wextra -std=c++11 
+CFlags = -Wall -Wextra -std=c++11
 LDFlags =
-libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi
+libs = GL glfw3 X11 Xxf86vm pthread Xrandr Xi GLEW
 libDir =
 
 #************************ DO NOT EDIT BELOW THIS LINE! ************************
@@ -36,7 +36,7 @@ includes_ := $(CFlags) -c -M
 
 ifeq ($(srcExt), cpp)
 	CC = $(CXX)
-	# CC = clang++
+	CC = clang++
 else
 	CFlags += -std=gnu99
 endif

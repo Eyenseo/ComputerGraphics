@@ -347,8 +347,8 @@ void Table::draw() {
               origin_[0], origin_[1], origin_[2]);
   glScalef(scale_[0], scale_[1], scale_[2]);
 
-  GLMatrix mv;
-  glGetDoublev(GL_MODELVIEW_MATRIX, mv);
+  // GLMatrix mv;
+  // glGetDoublev(GL_MODELVIEW_MATRIX, mv);
  /* local_axis_[0] = (mv * GLVector<XYZW>::XVec);
   local_axis_[1] = (mv * GLVector<XYZW>::YVec);
   local_axis_[2] = (mv * GLVector<XYZW>::ZVec);

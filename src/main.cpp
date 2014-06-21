@@ -422,6 +422,10 @@ int init_glfw(GLFWwindow*& window) {
 
   glfwMakeContextCurrent(window);
 
+  glEnable(GL_CULL_FACE);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);  // 4-byte pixel alignment
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
   glfwSetCursorPosCallback(window, &mouse_position_callback);
   glfwSetScrollCallback(window, &mouse_scroll_callback);
   glfwSetMouseButtonCallback(window, &mouse_button_callback);

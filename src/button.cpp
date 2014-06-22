@@ -9,6 +9,7 @@ Button::Button()
     , width_(0)
     , height_(0)
     , on_press_([]() {})
+    , on_click_([]() {})
     , on_release_([]() {})
     , pressed_(false) {
 }
@@ -19,6 +20,7 @@ Button::Button(unsigned int origin_x, unsigned int origin_y,
     , width_(0)
     , height_(0)
     , on_press_([]() {})
+    , on_click_([]() {})
     , on_release_([]() {})
     , pressed_(false) {
   load_bmp(image_path);

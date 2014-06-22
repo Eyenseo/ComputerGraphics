@@ -586,7 +586,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
-  temp->set_on_release([temp]() {
+  temp->set_on_click([temp]() {
     for(auto object : objects_) {
       delete object;
     }
@@ -600,7 +600,7 @@ void make_buttons(GLFWwindow*& window) {
       if(action == GLFW_PRESS) {
         temp->on_press(x, y);
       } else if(action == GLFW_RELEASE) {
-        temp->on_release(x, y);
+        temp->on_click(x, y);
       }
     }
   });
@@ -610,7 +610,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
-  temp->set_on_release([temp]() {
+  temp->set_on_click([temp]() {
     // TODO use modelview to get a better position
     Sphere* s = new Sphere(0, 0, 7);
     objects_.push_front(s);
@@ -625,7 +625,7 @@ void make_buttons(GLFWwindow*& window) {
       if(action == GLFW_PRESS) {
         temp->on_press(x, y);
       } else if(action == GLFW_RELEASE) {
-        temp->on_release(x, y);
+        temp->on_click(x, y);
       }
     }
   });
@@ -635,7 +635,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
-  temp->set_on_release([temp, window]() {
+  temp->set_on_click([temp, window]() {
     glfwSetWindowShouldClose(window, GL_TRUE);
   });
   mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
@@ -644,7 +644,7 @@ void make_buttons(GLFWwindow*& window) {
       if(action == GLFW_PRESS || action == GLFW_REPEAT) {
         temp->on_press(x, y);
       } else if(action == GLFW_RELEASE) {
-        temp->on_release(x, y);
+        temp->on_click(x, y);
       }
     }
   });

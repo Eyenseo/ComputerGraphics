@@ -189,8 +189,16 @@ void Button::on_press(unsigned int x, unsigned int y) {
   }
 }
 
-void Button::on_release(unsigned int x, unsigned int y) {
+void Button::on_click(unsigned int x, unsigned int y) {
   if(pressed_ && x > origin_[0] && y > origin_[1]
+     && x < origin_[0] + width_ * scale_[0]
+     && y < origin_[1] + height_ * scale_[1]) {
+    on_click_();
+  }
+}
+
+void Button::on_release(unsigned int x, unsigned int y) {
+  if(x > origin_[0] && y > origin_[1]
      && x < origin_[0] + width_ * scale_[0]
      && y < origin_[1] + height_ * scale_[1]) {
     on_release_();
@@ -199,6 +207,10 @@ void Button::on_release(unsigned int x, unsigned int y) {
 
 void Button::set_on_press(const std::function<void()>& f) {
   on_press_ = f;
+}
+
+void Button::set_on_click(const std::function<void()>& f) {
+  on_click_ = f;
 }
 
 void Button::set_on_release(const std::function<void()>& f) {

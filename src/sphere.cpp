@@ -31,6 +31,10 @@ void Sphere::step() {
 }
 
 void Sphere::draw() {
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
+
   const int n1 = 32;
   const int n2 = 32;
   const double a1d = M_PI / n1;
@@ -38,7 +42,7 @@ void Sphere::draw() {
 
   set_material_color(1, 0);
 
-  glEnable(GL_RESCALE_NORMAL);
+  glEnable(GL_NORMALIZE);
 
   rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_[0], origin_[1],
               origin_[2]);

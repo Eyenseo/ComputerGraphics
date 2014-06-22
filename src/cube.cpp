@@ -57,6 +57,7 @@ void Cube::draw() {
   };
 
   set_material_color(1, 0);
+  glEnable(GL_NORMALIZE);
 
   // glEnable(GL_RESCALE_NORMAL); // TODO Needed?
   glMatrixMode(GL_MODELVIEW);

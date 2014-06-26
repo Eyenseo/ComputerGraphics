@@ -110,32 +110,32 @@ void Sphere::load_shader(const char* filename, GLuint& shader, bool vertex) {
 
 
 void Sphere::draw() {
-  static bool once = true;
-  static GLuint vertex_shader = 0;
-  static GLuint fragment_shader = 0;
-  static GLuint shader_program = 0;
-  if(once) {
-    // load_shader("point_light_per_pixel.vert", vertex_shader, true);
-    // load_shader("point_light_per_pixel.frag", fragment_shader, false);
-    load_shader("directional_light_per_pixel.vert", vertex_shader, true);
-    load_shader("directional_light_per_pixel.frag", fragment_shader, false);
-    // load_shader("per_pixel_lighting.vert", vertex_shader,true);
-    // load_shader("per_pixel_lighting.frag", fragment_shader,false);
+  // static bool once = true;
+  // static GLuint vertex_shader = 0;
+  // static GLuint fragment_shader = 0;
+  // static GLuint shader_program = 0;
+  // if(once) {
+  //   // load_shader("point_light_per_pixel.vert", vertex_shader, true);
+  //   // load_shader("point_light_per_pixel.frag", fragment_shader, false);
+  //   load_shader("directional_light_per_pixel.vert", vertex_shader, true);
+  //   load_shader("directional_light_per_pixel.frag", fragment_shader, false);
+  //   // load_shader("per_pixel_lighting.vert", vertex_shader,true);
+  //   // load_shader("per_pixel_lighting.frag", fragment_shader,false);
 
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-    once = false;
-  }
+  //   shader_program = glCreateProgram();
+  //   glAttachShader(shader_program, vertex_shader);
+  //   glAttachShader(shader_program, fragment_shader);
+  //   glLinkProgram(shader_program);
+  //   once = false;
+  // }
 
-  glDisable(GL_LIGHTING);
-  glUseProgram(shader_program);
+  // glDisable(GL_LIGHTING);
+  // glUseProgram(shader_program);
+
   set_material_color(1, 0);
 
-  // set_material_color(1, 0);
   glEnable(GL_NORMALIZE);
-  // glShadeModel(GL_SMOOTH);
+  glShadeModel(GL_SMOOTH);
 
   rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_[0], origin_[1],
               origin_[2]);
@@ -143,29 +143,25 @@ void Sphere::draw() {
 
 
   glBindBuffer(GL_ARRAY_BUFFER, vboID_);
-  // glPointSize(4);
 
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
-  // glEnableClientState(GL_COLOR_ARRAY);
 
   glVertexPointer(3, GL_FLOAT, 0, 0);
   glNormalPointer(GL_FLOAT, 0, (void*)(sizeof(normals_)));
-  // glColorPointer(3, GL_FLOAT, 0,
-  // (void*)(sizeof(vertices)+sizeof(normals)));
 
+  // glPointSize(4);
   // glDrawArrays(GL_POINTS, 0, vertices_size_ / 3);
   glDrawArrays(GL_TRIANGLES, 0, vertices_size_ / 3);
 
-  // glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   glPopMatrix();
-  glUseProgram(0);
-  glEnable(GL_LIGHTING);
+  // glUseProgram(0);
+  // glEnable(GL_LIGHTING);
 }
 
 void Sphere::update_geometry() {

@@ -24,7 +24,7 @@ void Physic::collision() {
     (*i)->step();
 
     if((*i)->is_hitable()) {
-      for(Inter j = std::next(i, 1); j != end; ++j) {
+      for(Inter j = std::next(i); j != end; ++j) {
         if((*j)->is_hitable()) {
           for(auto& other_box : (*j)->bounding_box_list_) {
             SphereBB* s1 = dynamic_cast<SphereBB*>(other_box);
@@ -59,41 +59,48 @@ void Physic::collision(SphereBB& a, SphereBB& b) {
         = [](double x) { return x * x; }(a.radius_ + b.radius_);
 
     if(distance_length_sq < orgin_length_sq) {
-      GLVector<XYZW> n = distance;
-      n.Normalize();
+      Hitable& a_hit = *a.hitable_;
+      Hitable& b_hit = *b.hitable_;
 
-      if(a.hitable_->is_moveable() && b.hitable_->is_moveable()) {
-        // Calculate new speed direction
-        const GLVector<XYZW> a_speed = a.hitable_->speed_;
-        {
-          const GLVector<XYZW> a_sub_b = *a.origin_ - *b.origin_;
-          a.hitable_->speed_ -= ((a_speed - b.hitable_->speed_) * a_sub_b
-                                 / a_sub_b.Length2()) * a_sub_b;
+      if(!a_hit.is_only_test() && !b_hit.is_only_test()) {
+        GLVector<XYZW> n = distance;
+        n.Normalize();
+
+        if(a_hit.is_moveable() && b_hit.is_moveable()) {
+          // Calculate new speed direction
+          const GLVector<XYZW> a_speed = a_hit.speed_;
+          {
+            const GLVector<XYZW> a_sub_b = *a.origin_ - *b.origin_;
+            a_hit.speed_ -= ((a_speed - b_hit.speed_) * a_sub_b
+                             / a_sub_b.Length2()) * a_sub_b;
+          }
+          {
+            const GLVector<XYZW> b_sub_a = *b.origin_ - *a.origin_;
+            b_hit.speed_ -= ((b_hit.speed_ - a_speed) * b_sub_a
+                             / b_sub_a.Length2()) * b_sub_a;
+          }
+
+          // Move objects out of each other
+          const GLVector<XYZW> half_intersection
+              = (distance - n * b.radius_ - n * a.radius_) / 2;
+          *a.origin_ -= half_intersection;
+          *b.origin_ += half_intersection;
+        } else if(a_hit.is_moveable()) {
+          // Mirror speed
+          a_hit.speed_ -= 2 * (n * (n * a_hit.speed_));
+
+          // Move object out of the unmoveable one
+          *a.origin_ -= (distance - (n * b.radius_) - (n * a.radius_));
+        } else if(b_hit.is_moveable()) {
+          // Mirror speed
+          b_hit.speed_ -= 2 * (n * (n * b_hit.speed_));
+
+          // Move object out of the unmoveable one
+          *b.origin_ += (distance - (n * b.radius_) - (n * a.radius_));
         }
-        {
-          const GLVector<XYZW> b_sub_a = *b.origin_ - *a.origin_;
-          b.hitable_->speed_ -= ((b.hitable_->speed_ - a_speed) * b_sub_a
-                                 / b_sub_a.Length2()) * b_sub_a;
-        }
-
-        // Move objects out of each other
-        const GLVector<XYZW> half_intersection
-            = (distance - n * b.radius_ - n * a.radius_) / 2;
-        *a.origin_ -= half_intersection;
-        *b.origin_ += half_intersection;
-      } else if(a.hitable_->is_moveable()) {
-        // Mirror speed
-        a.hitable_->speed_ -= 2 * (n * (n * a.hitable_->speed_));
-
-        // Move object out of the unmoveable one
-        *a.origin_ -= (distance - (n * b.radius_) - (n * a.radius_));
-      } else if(b.hitable_->is_moveable()) {
-        // Mirror speed
-        b.hitable_->speed_ -= 2 * (n * (n * b.hitable_->speed_));
-
-        // Move object out of the unmoveable one
-        *b.origin_ += (distance - (n * b.radius_) - (n * a.radius_));
       }
+      a_hit.on_collision(&b_hit);
+      b_hit.on_collision(&a_hit);
     }
   }
 }
@@ -127,37 +134,44 @@ void Physic::collision(SphereBB& a, OBB& b) {
   const double distance_length_sq = distance.Length2();
 
   if(distance_length_sq < a.radius_ * a.radius_) {
-    GLVector<XYZW> n = distance;
-    n.Normalize();
+    Hitable& a_hit = *a.hitable_;
+    Hitable& b_hit = *b.hitable_;
 
-    if(a.hitable_->is_moveable() && b.hitable_->is_moveable()) {
-      // Calculate new speed direction
-      const GLVector<XYZW> a_speed = a.hitable_->speed_;
-      const GLVector<XYZW> a_sub_b = *a.origin_ - *b.origin_;
-      const GLVector<XYZW> b_sub_a = *b.origin_ - *a.origin_;
+    if(!a_hit.is_only_test() && !b_hit.is_only_test()) {
+      GLVector<XYZW> n = distance;
+      n.Normalize();
 
-      a.hitable_->speed_ -= ((a_speed - b.hitable_->speed_) * a_sub_b
-                             / a_sub_b.Length2()) * a_sub_b;
-      b.hitable_->speed_ -= ((b.hitable_->speed_ - a_speed) * b_sub_a
-                             / b_sub_a.Length2()) * b_sub_a;
+      if(a_hit.is_moveable() && b_hit.is_moveable()) {
+        // Calculate new speed direction
+        const GLVector<XYZW> a_speed = a_hit.speed_;
+        const GLVector<XYZW> a_sub_b = *a.origin_ - *b.origin_;
+        const GLVector<XYZW> b_sub_a = *b.origin_ - *a.origin_;
 
-      // Move objects out of each other
-      const GLVector<XYZW> half_intersection = (distance - n * a.radius_) / 2;
-      *a.origin_ += half_intersection;
-      *b.origin_ -= half_intersection;
-    } else if(a.hitable_->is_moveable()) {
-      // Mirror speed
-      a.hitable_->speed_ -= 2 * (n * (n * a.hitable_->speed_));
+        a_hit.speed_ -= ((a_speed - b_hit.speed_) * a_sub_b / a_sub_b.Length2())
+                        * a_sub_b;
+        b_hit.speed_ -= ((b_hit.speed_ - a_speed) * b_sub_a / b_sub_a.Length2())
+                        * b_sub_a;
 
-      // Move object out of the unmoveable one
-      *a.origin_ += (distance - (n * a.radius_));
-    } else if(b.hitable_->is_moveable()) {
-      // Mirror speed
-      b.hitable_->speed_ -= 2 * (n * (n * b.hitable_->speed_));
+        // Move objects out of each other
+        const GLVector<XYZW> half_intersection = (distance - n * a.radius_) / 2;
+        *a.origin_ += half_intersection;
+        *b.origin_ -= half_intersection;
+      } else if(a_hit.is_moveable()) {
+        // Mirror speed
+        a_hit.speed_ -= 2 * (n * (n * a_hit.speed_));
 
-      // Move object out of the unmoveable one
-      *b.origin_ += (distance - (n * a.radius_));
+        // Move object out of the unmoveable one
+        *a.origin_ += (distance - (n * a.radius_));
+      } else if(b_hit.is_moveable()) {
+        // Mirror speed
+        b_hit.speed_ -= 2 * (n * (n * b_hit.speed_));
+
+        // Move object out of the unmoveable one
+        *b.origin_ += (distance - (n * a.radius_));
+      }
     }
+    a_hit.on_collision(&b_hit);
+    b_hit.on_collision(&a_hit);
   }
 }
 

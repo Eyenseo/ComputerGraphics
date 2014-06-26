@@ -13,21 +13,43 @@ class Hitable {
 protected:
   std::forward_list<BoundingBox*> bounding_box_list_;
 
+  std::function<void(const Hitable*)> on_collision_;
   GLVector<XYZW> speed_;
-  double fraction_ = 0.0035;
-  bool moveable_;
+  float fraction_;
+  bool only_test;
   bool hitable_;
+  bool moveable_;
 
 public:
   Hitable()
-      : moveable_(true)
-      , hitable_(true) {
+      : on_collision_([](const Hitable*) {})
+      , speed_(0, 0, 0, 0)
+      , fraction_(0.0035)
+      , only_test(false)
+      , hitable_(true)
+      , moveable_(true) {
   }
 
   virtual ~Hitable() {
   }
 
   virtual void step() = 0;
+
+  void on_collision(Hitable* h) {
+    on_collision_(h);
+  }
+
+  void set_on_collision(std::function<void(const Hitable*)> f) {
+    on_collision_ = f;
+  }
+
+  float get_fraction() {
+    return fraction_;
+  }
+
+  void set_fraction(float fraction) {
+    fraction_ = fraction;
+  }
 
   void add_speed(const GLVector<XYZW>& add) {
     speed_ += add;
@@ -63,6 +85,14 @@ public:
 
   bool is_hitable() const {
     return hitable_;
+  }
+
+  void set_only_test(bool test) {
+    only_test = test;
+  }
+
+  bool is_only_test() const {
+    return only_test;
   }
 };
 #endif  // ifndef HITABLE_HPP

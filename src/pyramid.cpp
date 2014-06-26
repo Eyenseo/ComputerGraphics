@@ -8,7 +8,7 @@ Pyramid::Pyramid()
 Pyramid::Pyramid(double origin_x, double origin_y, double origin_z)
     : Drawable(origin_x, origin_y, origin_z)
     , Hitable() {
-  sb_ = new SphereBB(this, &origin_, .5);
+  sb_ = new SphereBB(this, &origin_, .1);
   add_bounding_box(sb_);
 }
 
@@ -16,7 +16,7 @@ Pyramid::Pyramid(double origin_x, double origin_y, double origin_z,
                  unsigned char colors)
     : Drawable(origin_x, origin_y, origin_z, colors)
     , Hitable() {
-  sb_ = new SphereBB(this, &origin_, .5);
+  sb_ = new SphereBB(this, &origin_, .1);
   add_bounding_box(sb_);
 }
 

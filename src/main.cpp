@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <vector>
 
+#include "include/animated_cube.hpp"
 #include "include/cube.hpp"
 #include "include/pyramid.hpp"
 #include "include/sphere.hpp"
@@ -547,6 +548,7 @@ void init_lighting() {
  */
 void make_objects(GLFWwindow* window) {
   Drawable* temp;
+
   double dif_x = -4;
   double dif_y = -4;
   game_started_ = false;

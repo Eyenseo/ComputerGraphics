@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "include/animated_cube.hpp"
 #include "include/cube.hpp"
 #include "include/pyramid.hpp"
 #include "include/sphere.hpp"
@@ -42,13 +41,14 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
+static bool game_mode_ = true;
+static bool game_started_ = false;
 
 static double mouse_divider_ = 0.35;
-static bool speed_button_pressed_ = false;
+static bool speed_key_pressed_ = false;
 
-static Table* table;
-static Sphere* interactive;
-static Sphere* selected_;
+static Sphere* interactive_;
+static Drawable* selected_;
 
 /**
  * Function taken from http://r3dux.org/2012/07/a-simple-glfw-fps-counter/
@@ -159,9 +159,9 @@ void key_callback(GLFWwindow* /*window*/, int key, int /*scancode*/, int action,
  */
 void mouse_position_callback(GLFWwindow* window, double x_pos, double y_pos) {
   if(glfwGetMouseButton(window, 0) == GLFW_PRESS) {
-    if(glfwGetKey(window, 341) == GLFW_PRESS) {
-      speed_button_pressed_ = true;
-    } else if(glfwGetKey(window, 340) == GLFW_PRESS) {  // CTRL/STRG
+    if(!game_mode_ && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+      speed_key_pressed_ = true;
+    } else if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
       global_x_rotation_ = global_x_rotation_ + (y_pos - mouse_down_y_) / 8;
       global_z_rotation_ = global_z_rotation_ + (x_pos - mouse_down_x_) / 8;
 
@@ -218,6 +218,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
  *     G y-axis -
  *     b z-axis +
  *     B z-axis -
+ *   Color:
+ *     z red +
+ *     Z red -
+ *     h green +
+ *     H green -
+ *     n blue +
+ *     N blue -
  *
  *   Stop Sphere from moving:
  *     m
@@ -278,12 +285,12 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_R == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_scale_y(selected_->get_scale_y() + .05);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_scale_x(selected_->get_scale_x() + .05);
       } else {
-        double scale_y = selected_->get_scale_y();
-        if(scale_y > .25) {
-          selected_->set_scale_y(scale_y - .05);
+        double scale_x = selected_->get_scale_x();
+        if(scale_x > .25) {
+          selected_->set_scale_x(scale_x - .05);
         }
       }
     }
@@ -291,7 +298,7 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_F == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
+      if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_scale_y(selected_->get_scale_y() + .05);
       } else {
         double scale_y = selected_->get_scale_y();
@@ -304,12 +311,12 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_V == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_scale_y(selected_->get_scale_y() + .05);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_scale_z(selected_->get_scale_z() + .05);
       } else {
-        double scale_y = selected_->get_scale_y();
-        if(scale_y > .25) {
-          selected_->set_scale_y(scale_y - .05);
+        double scale_z = selected_->get_scale_z();
+        if(scale_z > .25) {
+          selected_->set_scale_z(scale_z - .05);
         }
       }
     }
@@ -319,17 +326,17 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_T == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_rotation_y(selected_->get_rotation_y() + .5);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_rotation_x(selected_->get_rotation_x() + .5);
       } else {
-        selected_->set_rotation_y(selected_->get_rotation_y() - .5);
+        selected_->set_rotation_x(selected_->get_rotation_x() - .5);
       }
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_G == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
+      if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_rotation_y(selected_->get_rotation_y() + .5);
       } else {
         selected_->set_rotation_y(selected_->get_rotation_y() - .5);
@@ -339,10 +346,42 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_B == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_rotation_y(selected_->get_rotation_y() + .5);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_rotation_z(selected_->get_rotation_z() + .5);
       } else {
-        selected_->set_rotation_y(selected_->get_rotation_y() - .5);
+        selected_->set_rotation_z(selected_->get_rotation_z() - .5);
+      }
+    }
+  });
+
+  // Color
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_Y == key)  // US Keymap
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_color_red(selected_->get_color_red(0) + .01, 0);
+      } else {
+        selected_->set_color_red(selected_->get_color_red(0) - .01, 0);
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_H == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_color_green(selected_->get_color_green(0) + .01, 0);
+      } else {
+        selected_->set_color_green(selected_->get_color_green(0) - .01, 0);
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_N == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_color_blue(selected_->get_color_blue(0) + .01, 0);
+      } else {
+        selected_->set_color_blue(selected_->get_color_blue(0) - .01, 0);
       }
     }
   });
@@ -353,19 +392,17 @@ void register_callbacks(GLFWwindow* window) {
   //  CTRL-key is no longer pressed and the mouse position to prevent jumping.
   //  If the CTRL-KEy is pressed it will update the translation values.
   key_callbacks_.push_front([window](int key, int action, int) {
-    if(key == 340) {
+    if(key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS
+       && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
       double x_pos, y_pos;
       glfwGetCursorPos(window, &x_pos, &y_pos);
 
       mouse_down_x_ = x_pos;
       mouse_down_y_ = y_pos;
 
-      if((action == GLFW_PRESS)
-         && (glfwGetMouseButton(window, 0) == GLFW_PRESS)) {
-        global_x_translation_prev_ = global_x_translation_;
-        global_y_translation_prev_ = global_y_translation_;
-        global_z_translation_prev_ = global_z_translation_;
-      }
+      global_x_translation_prev_ = global_x_translation_;
+      global_y_translation_prev_ = global_y_translation_;
+      global_z_translation_prev_ = global_z_translation_;
     }
   });
   key_callbacks_.push_front([window](int key, int, int) {
@@ -425,6 +462,9 @@ int init_glfw(GLFWwindow*& window) {
   glewExperimental = GL_TRUE;
   glewInit();
 
+  glEnable(GL_CULL_FACE);
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
   glfwSetCursorPosCallback(window, &mouse_position_callback);
   glfwSetScrollCallback(window, &mouse_scroll_callback);
   glfwSetMouseButtonCallback(window, &mouse_button_callback);
@@ -449,6 +489,10 @@ void init_view() {
 
   glFrustum(-.5, .5, -.5, .5, 1, 200);
 
+  // Reset modelview
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
   // Apply gobal movement
   glTranslated(global_x_translation_, global_y_translation_,
                global_z_translation_);
@@ -457,10 +501,6 @@ void init_view() {
   glRotated(global_x_rotation_, 1, 0, 0);
   glRotated(global_y_rotation_, 0, 1, 0);
   glRotated(global_z_rotation_, 0, 0, 1);
-
-  // Reset modelview
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
 }
 
 /**
@@ -471,12 +511,13 @@ void init_lighting() {
   GLfloat white_color[] = {.25, .25, .25, 1};
 
   GLfloat pos_0[] = {15, 15, 13, 1};
-  GLfloat pos_1[] = {0, 0, 50, 1};
-  GLfloat pos_2[] = {15, 50, 15, 1};
+  // GLfloat pos_1[] = {0, 0, 50, 1};
+  GLfloat pos_2[] = {15, 50, 50, 1};
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
 
+  glShadeModel(GL_SMOOTH);
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
   glEnable(GL_LIGHTING);
@@ -489,69 +530,68 @@ void init_lighting() {
   glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.00025);
   glEnable(GL_LIGHT0);
 
-  glLightfv(GL_LIGHT1, GL_POSITION, pos_1);
-  glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
-  glEnable(GL_LIGHT1);
+  // glLightfv(GL_LIGHT1, GL_POSITION, pos_1);
+  // glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+  // glEnable(GL_LIGHT1);
 
   glLightfv(GL_LIGHT2, GL_POSITION, pos_2);
   glLightfv(GL_LIGHT2, GL_DIFFUSE, white_color);
   glLightfv(GL_LIGHT2, GL_SPECULAR, white_color);
   glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, .00f);
   glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, .00f);
-  glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.00045);
+  glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.00025);
 }
 
 /**
  * The function will create all objects to be rendered
  */
-void make_objects() {
+void make_objects(GLFWwindow* window) {
   Drawable* temp;
-
   double dif_x = -4;
   double dif_y = -4;
+  game_started_ = false;
 
-  // temp = new Sphere(0, 0, 0);
-  temp = new Sphere(dif_x, dif_y, 6.61);
-  interactive = dynamic_cast<Sphere*>(temp);
+  Sphere* imp = new Sphere(-6, 0, 5.61);
+
+  temp = imp;
+  interactive_ = dynamic_cast<Sphere*>(temp);
   temp->set_color(.7, .7, .7, 0);
+  temp->set_scale_y(0.8);
   objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  hitables_.push_front(dynamic_cast<Sphere*>(temp));
 
-  for(unsigned int i = 0; i < 40; ++i) {
+  for(unsigned int i = 0; i < 6; ++i) {
     switch(i % 3) {
     case 0:
       dif_x += 1.1;
-    // temp->set_color(i+40, i/2+40, i/2+40, 0);
       break;
     case 1:
       dif_x += 1.1;
-    // temp->set_color(i/2+40, i+40, i/2+40, 0);
       break;
     case 2:
       dif_x -= 1.1;
       dif_y += 1.1;
-    // temp->set_color(i/2+40, i/2+40, i+40, 0);
     }
     temp = new Sphere(dif_x, dif_y, 5.61);
     objects_.push_front(temp);
-    hitables_.push_front((Sphere*)temp);
+    hitables_.push_front(dynamic_cast<Sphere*>(temp));
   }
   (*hitables_.begin())->set_moveable(false);
-  ((Sphere*)*hitables_.begin())->set_color(123, 12, 12, 0);
-selected_ = ((Sphere*)*hitables_.begin());
+  dynamic_cast<Sphere*>(*hitables_.begin())->set_color(123, 12, 12, 0);
+
   temp = new Cube(2, -2, 5.9);
   temp->set_color(213, 123, 34, 0);
   temp->set_rotation_x(45);
   temp->set_rotation_z(45);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(-2, 2, 5.61);
   temp->set_color(213, 123, 34, 0);
   temp->set_scale_y(0.25);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(-4, 4, 5.71);
@@ -560,7 +600,7 @@ selected_ = ((Sphere*)*hitables_.begin());
   temp->set_rotation_z(45);
   temp->set_scale_y(0.25);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(-1.25, -2, 5.32);
@@ -572,15 +612,32 @@ selected_ = ((Sphere*)*hitables_.begin());
   temp->set_scale_y(2);
   temp->set_scale_z(0.01);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
+  temp = new Pyramid(-6, 0, 5.15);  // Start
+  temp->set_color(0, 1, 0, 0);
+  objects_.push_front(temp);
+  hitables_.push_front(dynamic_cast<Pyramid*>(temp));
+  (*hitables_.begin())->set_hitable(false);
+
+  temp = new Pyramid(6, 0, 5.15);  // End
+  temp->set_color(1, 0, 0, 0);
+  objects_.push_front(temp);
+  hitables_.push_front(dynamic_cast<Pyramid*>(temp));
+  dynamic_cast<Hitable*>(temp)
+      ->set_on_collision([imp, window](const Hitable* h) {
+        const Sphere* s = dynamic_cast<const Sphere*>(h);
+        if(imp == s) {
+          glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+      });
+  (*hitables_.begin())->set_only_test(true);
+
   temp = new Table(0, 0, 0);
-  // temp->set_rotation_y(45);
-  table = (Table*)temp;
   temp->set_color(15, 36, 117, 0);
   objects_.push_front(temp);
-  hitables_.push_front((Table*)temp);
+  hitables_.push_front(dynamic_cast<Table*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(0, 0, 0);
@@ -590,24 +647,21 @@ selected_ = ((Sphere*)*hitables_.begin());
   temp->set_scale_y(0.05);
   temp->set_scale_z(200);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 }
 
 void make_buttons(GLFWwindow*& window) {
   Button* temp = nullptr;
+  Sphere** imp = &interactive_;
 
-  temp = new Button(0, 0, "./img/new.bmp");
+  temp = new Button(0, 0, "./img/start.bmp");
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
-  temp->set_on_release([temp]() {
-    for(auto object : objects_) {
-      delete object;
-    }
-    objects_.clear();
-    hitables_.clear();
-    make_objects();
+  temp->set_on_click([temp, imp]() {
+    (*imp)->set_speed(GLVector<XYZ>(10, 0, 0));
+    game_started_ = true;
   });
   mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
                                      unsigned int x, unsigned int y) {
@@ -615,7 +669,7 @@ void make_buttons(GLFWwindow*& window) {
       if(action == GLFW_PRESS) {
         temp->on_press(x, y);
       } else if(action == GLFW_RELEASE) {
-        temp->on_release(x, y);
+        temp->on_click(x, y);
       }
     }
   });
@@ -625,7 +679,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
-  temp->set_on_release([temp]() {
+  temp->set_on_click([temp]() {
     // TODO use modelview to get a better position
     Sphere* s = new Sphere(0, 0, 7);
     objects_.push_front(s);
@@ -640,17 +694,88 @@ void make_buttons(GLFWwindow*& window) {
       if(action == GLFW_PRESS) {
         temp->on_press(x, y);
       } else if(action == GLFW_RELEASE) {
-        temp->on_release(x, y);
+        temp->on_click(x, y);
       }
     }
   });
   buttons_.push_front(temp);
 
-  temp = new Button(0, 128, "./img/exit.bmp");
+  temp = new Button(0, 128, "./img/cube.bmp");
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
-  temp->set_on_release([temp, window]() {
+  temp->set_on_click([temp]() {
+    // TODO use modelview to get a better position
+    Cube* c = new Cube(0, 0, 7);
+    c->set_moveable(false);
+    objects_.push_front(c);
+    hitables_.push_front(c);
+    selected_ = c;
+
+    temp->set_color(0, 0, 1, 0);
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS || action == GLFW_REPEAT) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_click(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 192, "./img/reset.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_click([temp, imp]() {
+    game_started_ = false;
+    (*imp)->set_origin(GLVector<XYZW>(-6, 0, 5.61, 1));
+    (*imp)->set_speed(GLVector<XYZ>());
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_click(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 256, "./img/new.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_click([temp, window]() {
+    for(auto object : objects_) {
+      delete object;
+    }
+    objects_.clear();
+    hitables_.clear();
+    make_objects(window);
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_click(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 320, "./img/exit.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_click([temp, window]() {
     glfwSetWindowShouldClose(window, GL_TRUE);
   });
   mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
@@ -659,7 +784,7 @@ void make_buttons(GLFWwindow*& window) {
       if(action == GLFW_PRESS || action == GLFW_REPEAT) {
         temp->on_press(x, y);
       } else if(action == GLFW_RELEASE) {
-        temp->on_release(x, y);
+        temp->on_click(x, y);
       }
     }
   });
@@ -705,25 +830,19 @@ GLVector<XYZW> mouse_pos_to_world(const GLMatrix& modelXprojectionINV,
 
 void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
                 const GLVector<XYZW>& b) {
-  if(speed_button_pressed_ && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
+  if(speed_key_pressed_ && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
     // This prevents clipping with the near plane
     GLMatrix model;
     glGetDoublev(GL_MODELVIEW_MATRIX, model);
-
-    // Retrieve projection matrix
-    GLMatrix projection;
-    glGetDoublev(GL_PROJECTION_MATRIX, projection);
-
-    GLMatrix mp = model.transpose() * projection.transpose();
-    const GLVector<XYZW> clip = projection * GLVector<XYZW>::ZVec * 0.0001;
+    const GLVector<XYZW> clip = model * GLVector<XYZW>::ZVec * 0.0001;
 
     glDisable(GL_LIGHTING);
     glColor3f(1, 0, 0);
     glLineWidth(4);
 
     glBegin(GL_LINES);
-    glVertex3dv(a + clip);
-    glVertex3dv(b + clip);
+    glVertex3dv(a - clip);
+    glVertex3dv(b - clip);
     glEnd();
 
     glLineWidth(1);
@@ -766,17 +885,17 @@ void mouse_interaction(GLFWwindow* window) {
     mouse_press = mouse_pos_to_world(mp, viewport, mouse_press);
     mouse_current = mouse_pos_to_world(mp, viewport, mouse_current);
 
-    if(speed_button_pressed_) {
+    if(speed_key_pressed_) {
       debug_line(window, mouse_press, mouse_current);
 
       if(glfwGetMouseButton(window, 0) != GLFW_PRESS) {
-        speed_button_pressed_ = false;
+        speed_key_pressed_ = false;
 
         GLVector<XYZW> direction_speed = (mouse_press - mouse_current)
                                          / mouse_divider_;
         direction_speed[2] = 0;
 
-        interactive->add_speed(direction_speed / mouse_divider_);
+        interactive_->add_speed(direction_speed / mouse_divider_);
       }
     }
   }
@@ -809,6 +928,13 @@ Control newly created Objects via:\n\
     G y-axis -\n\
     b z-axis +\n\
     B z-axis -\n\
+  Color:\n\
+    z red +\n\
+    Z red -\n\
+    h green +\n\
+    H green -\n\
+    n blue +\n\
+    N blue -\n\
 \n\
   Stop Sphere from moving:\n\
     m\n");
@@ -817,7 +943,7 @@ Control newly created Objects via:\n\
     return error;
   }
 
-  make_objects();
+  make_objects(window);
   make_buttons(window);
 
   Physic phy(&hitables_);

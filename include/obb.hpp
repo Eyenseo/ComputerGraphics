@@ -51,6 +51,9 @@ class OBB : public BoundingBox {
   }
 
   void update_rotation(const GLVector<XYZ>& rotation) {
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
     static const double to_rad = 1.0 / 180.0 * M_PI;
 
     GLMatrix mx;

@@ -134,7 +134,7 @@ void Sphere::draw() {
   set_material_color(1, 0);
 
   // set_material_color(1, 0);
-  glEnable(GL_RESCALE_NORMAL);
+  glEnable(GL_NORMALIZE);
   // glShadeModel(GL_SMOOTH);
 
   rotate_from(rotation_[0], rotation_[1], rotation_[2], origin_[0], origin_[1],
@@ -169,6 +169,9 @@ void Sphere::draw() {
 }
 
 void Sphere::update_geometry() {
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
   const double a1d = M_PI / resolution_;
   const double a2d = M_PI / resolution_;
   unsigned int index = 0;

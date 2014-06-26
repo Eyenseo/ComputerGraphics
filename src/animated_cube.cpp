@@ -33,6 +33,10 @@ AnimatedCube::~AnimatedCube() {}
  * Calculates the new angel of the lid of the box
  */
 void AnimatedCube::calculate_current_angle() {
+#ifndef M_E
+#define M_E 2.71828182846
+#endif
+
   if(((state_ == OPENING) && (state_ != OPEN))
      || ((state_ == CLOSING) && (state_ != CLOSED))) {
     std::function<double()> fun // logistic function for the opening and closing of the lid

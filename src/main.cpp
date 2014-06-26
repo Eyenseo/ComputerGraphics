@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "include/animated_cube.hpp"
 #include "include/cube.hpp"
 #include "include/pyramid.hpp"
 #include "include/sphere.hpp"
@@ -41,12 +40,13 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
+static bool game_mode_ = true;
+static bool game_started_ = false;
 
 static double mouse_divider_ = 0.35;
-static bool speed_button_pressed_ = false;
+static bool speed_key_pressed_ = false;
 
-static Table* table;
-static Sphere* interactive;
+static Sphere* interactive_;
 static Drawable* selected_;
 
 /**
@@ -158,9 +158,9 @@ void key_callback(GLFWwindow* /*window*/, int key, int /*scancode*/, int action,
  */
 void mouse_position_callback(GLFWwindow* window, double x_pos, double y_pos) {
   if(glfwGetMouseButton(window, 0) == GLFW_PRESS) {
-    if(glfwGetKey(window, 341) == GLFW_PRESS) {
-      speed_button_pressed_ = true;
-    } else if(glfwGetKey(window, 340) == GLFW_PRESS) {  // CTRL/STRG
+    if(!game_mode_ && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+      speed_key_pressed_ = true;
+    } else if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
       global_x_rotation_ = global_x_rotation_ + (y_pos - mouse_down_y_) / 8;
       global_z_rotation_ = global_z_rotation_ + (x_pos - mouse_down_x_) / 8;
 
@@ -391,19 +391,17 @@ void register_callbacks(GLFWwindow* window) {
   //  CTRL-key is no longer pressed and the mouse position to prevent jumping.
   //  If the CTRL-KEy is pressed it will update the translation values.
   key_callbacks_.push_front([window](int key, int action, int) {
-    if(key == 340) {
+    if(key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS
+       && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
       double x_pos, y_pos;
       glfwGetCursorPos(window, &x_pos, &y_pos);
 
       mouse_down_x_ = x_pos;
       mouse_down_y_ = y_pos;
 
-      if((action == GLFW_PRESS)
-         && (glfwGetMouseButton(window, 0) == GLFW_PRESS)) {
-        global_x_translation_prev_ = global_x_translation_;
-        global_y_translation_prev_ = global_y_translation_;
-        global_z_translation_prev_ = global_z_translation_;
-      }
+      global_x_translation_prev_ = global_x_translation_;
+      global_y_translation_prev_ = global_y_translation_;
+      global_z_translation_prev_ = global_z_translation_;
     }
   });
   key_callbacks_.push_front([window](int key, int, int) {
@@ -462,7 +460,6 @@ int init_glfw(GLFWwindow*& window) {
   glfwMakeContextCurrent(window);
 
   glEnable(GL_CULL_FACE);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);  // 4-byte pixel alignment
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
   glfwSetCursorPosCallback(window, &mouse_position_callback);
@@ -532,17 +529,20 @@ void init_lighting() {
 /**
  * The function will create all objects to be rendered
  */
-void make_objects() {
+void make_objects(GLFWwindow* window) {
   Drawable* temp;
-
   double dif_x = -4;
   double dif_y = -4;
+  game_started_ = false;
 
-  temp = new Sphere(dif_x, dif_y, 6.61);
-  interactive = dynamic_cast<Sphere*>(temp);
+  Sphere* imp = new Sphere(-6, 0, 5.61);
+
+  temp = imp;
+  interactive_ = dynamic_cast<Sphere*>(temp);
   temp->set_color(.7, .7, .7, 0);
+  temp->set_scale_y(0.8);
   objects_.push_front(temp);
-  hitables_.push_front((Sphere*)temp);
+  hitables_.push_front(dynamic_cast<Sphere*>(temp));
 
   for(unsigned int i = 0; i < 6; ++i) {
     switch(i % 3) {
@@ -558,24 +558,24 @@ void make_objects() {
     }
     temp = new Sphere(dif_x, dif_y, 5.61);
     objects_.push_front(temp);
-    hitables_.push_front((Sphere*)temp);
+    hitables_.push_front(dynamic_cast<Sphere*>(temp));
   }
   (*hitables_.begin())->set_moveable(false);
-  ((Sphere*)*hitables_.begin())->set_color(123, 12, 12, 0);
+  dynamic_cast<Sphere*>(*hitables_.begin())->set_color(123, 12, 12, 0);
 
   temp = new Cube(2, -2, 5.9);
   temp->set_color(213, 123, 34, 0);
   temp->set_rotation_x(45);
   temp->set_rotation_z(45);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(-2, 2, 5.61);
   temp->set_color(213, 123, 34, 0);
   temp->set_scale_y(0.25);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(-4, 4, 5.71);
@@ -584,7 +584,7 @@ void make_objects() {
   temp->set_rotation_z(45);
   temp->set_scale_y(0.25);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(-1.25, -2, 5.32);
@@ -596,15 +596,32 @@ void make_objects() {
   temp->set_scale_y(2);
   temp->set_scale_z(0.01);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
+  temp = new Pyramid(-6, 0, 5.15);  // Start
+  temp->set_color(0, 1, 0, 0);
+  objects_.push_front(temp);
+  hitables_.push_front(dynamic_cast<Pyramid*>(temp));
+  (*hitables_.begin())->set_hitable(false);
+
+  temp = new Pyramid(6, 0, 5.15);  // End
+  temp->set_color(1, 0, 0, 0);
+  objects_.push_front(temp);
+  hitables_.push_front(dynamic_cast<Pyramid*>(temp));
+  dynamic_cast<Hitable*>(temp)
+      ->set_on_collision([imp, window](const Hitable* h) {
+        const Sphere* s = dynamic_cast<const Sphere*>(h);
+        if(imp == s) {
+          glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+      });
+  (*hitables_.begin())->set_only_test(true);
+
   temp = new Table(0, 0, 0);
-  // temp->set_rotation_y(45);
-  table = (Table*)temp;
   temp->set_color(15, 36, 117, 0);
   objects_.push_front(temp);
-  hitables_.push_front((Table*)temp);
+  hitables_.push_front(dynamic_cast<Table*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(0, 0, 0);
@@ -614,24 +631,21 @@ void make_objects() {
   temp->set_scale_y(0.05);
   temp->set_scale_z(200);
   objects_.push_front(temp);
-  hitables_.push_front((Cube*)temp);
+  hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 }
 
 void make_buttons(GLFWwindow*& window) {
   Button* temp = nullptr;
+  Sphere** imp = &interactive_;
 
-  temp = new Button(0, 0, "./img/new.bmp");
+  temp = new Button(0, 0, "./img/start.bmp");
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
-  temp->set_on_click([temp]() {
-    for(auto object : objects_) {
-      delete object;
-    }
-    objects_.clear();
-    hitables_.clear();
-    make_objects();
+  temp->set_on_click([temp, imp]() {
+    (*imp)->set_speed(GLVector<XYZ>(10, 0, 0));
+    game_started_ = true;
   });
   mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
                                      unsigned int x, unsigned int y) {
@@ -696,7 +710,52 @@ void make_buttons(GLFWwindow*& window) {
   });
   buttons_.push_front(temp);
 
-  temp = new Button(0, 192, "./img/exit.bmp");
+  temp = new Button(0, 192, "./img/reset.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_click([temp, imp]() {
+    game_started_ = false;
+    (*imp)->set_origin(GLVector<XYZW>(-6, 0, 5.61, 1));
+    (*imp)->set_speed(GLVector<XYZ>());
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_click(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 256, "./img/new.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_click([temp, window]() {
+    for(auto object : objects_) {
+      delete object;
+    }
+    objects_.clear();
+    hitables_.clear();
+    make_objects(window);
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_click(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 320, "./img/exit.bmp");
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
@@ -755,7 +814,7 @@ GLVector<XYZW> mouse_pos_to_world(const GLMatrix& modelXprojectionINV,
 
 void debug_line(GLFWwindow* window, const GLVector<XYZW>& a,
                 const GLVector<XYZW>& b) {
-  if(speed_button_pressed_ && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
+  if(speed_key_pressed_ && glfwGetMouseButton(window, 0) == GLFW_PRESS) {
     // This prevents clipping with the near plane
     GLMatrix model;
     glGetDoublev(GL_MODELVIEW_MATRIX, model);
@@ -810,17 +869,17 @@ void mouse_interaction(GLFWwindow* window) {
     mouse_press = mouse_pos_to_world(mp, viewport, mouse_press);
     mouse_current = mouse_pos_to_world(mp, viewport, mouse_current);
 
-    if(speed_button_pressed_) {
+    if(speed_key_pressed_) {
       debug_line(window, mouse_press, mouse_current);
 
       if(glfwGetMouseButton(window, 0) != GLFW_PRESS) {
-        speed_button_pressed_ = false;
+        speed_key_pressed_ = false;
 
         GLVector<XYZW> direction_speed = (mouse_press - mouse_current)
                                          / mouse_divider_;
         direction_speed[2] = 0;
 
-        interactive->add_speed(direction_speed / mouse_divider_);
+        interactive_->add_speed(direction_speed / mouse_divider_);
       }
     }
   }
@@ -868,7 +927,7 @@ Control newly created Objects via:\n\
     return error;
   }
 
-  make_objects();
+  make_objects(window);
   make_buttons(window);
 
   Physic phy(&hitables_);

@@ -36,10 +36,10 @@ void Cube::step() {
 }
 
 void Cube::draw() {
-  GLVector<XYZW> bottom_left  = GLVector<XYZW>(-.5, -.5, 0, 1);
-  GLVector<XYZW> top_left     = GLVector<XYZW>(-.5, .5, 0, 1);
-  GLVector<XYZW> top_right    = GLVector<XYZW>(.5, .5, 0, 1);
-  GLVector<XYZW> bottom_right = GLVector<XYZW>(.5, -.5, 0, 1);
+  static const GLVector<XYZW> bottom_left = GLVector<XYZW>(-.5, -.5, 0, 1);
+  static const GLVector<XYZW> top_left = GLVector<XYZW>(-.5, .5, 0, 1);
+  static const GLVector<XYZW> top_right = GLVector<XYZW>(.5, .5, 0, 1);
+  static const GLVector<XYZW> bottom_right = GLVector<XYZW>(.5, -.5, 0, 1);
 
   auto face = [&](const GLVector<XYZW>& v1, const GLVector<XYZW>& v2,
                   const GLVector<XYZW>& v3, const GLVector<XYZW>& v4) {

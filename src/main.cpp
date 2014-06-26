@@ -530,12 +530,14 @@ void init_lighting() {
  * The function will create all objects to be rendered
  */
 void make_objects(GLFWwindow* window) {
-  Drawable* temp;
+  game_started_ = false;
+  selected_ = nullptr;
+
   double dif_x = -4;
   double dif_y = -4;
-  game_started_ = false;
 
   Sphere* imp = new Sphere(-6, 0, 5.61);
+  Drawable* temp;
 
   temp = imp;
   interactive_ = dynamic_cast<Sphere*>(temp);
@@ -644,7 +646,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
   temp->set_on_click([temp, imp]() {
-    if(!game_started_) {
+    if(game_mode_ && !game_started_) {
       (*imp)->set_speed(GLVector<XYZ>(10, 0, 0));
       game_started_ = true;
     }

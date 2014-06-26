@@ -47,7 +47,7 @@ static bool speed_button_pressed_ = false;
 
 static Table* table;
 static Sphere* interactive;
-static Sphere* selected_;
+static Drawable* selected_;
 
 /**
  * Function taken from http://r3dux.org/2012/07/a-simple-glfw-fps-counter/
@@ -217,6 +217,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
  *     G y-axis -
  *     b z-axis +
  *     B z-axis -
+ *   Color:
+ *     z red +
+ *     Z red -
+ *     h green +
+ *     H green -
+ *     n blue +
+ *     N blue -
  *
  *   Stop Sphere from moving:
  *     m
@@ -277,12 +284,12 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_R == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_scale_y(selected_->get_scale_y() + .05);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_scale_x(selected_->get_scale_x() + .05);
       } else {
-        double scale_y = selected_->get_scale_y();
-        if(scale_y > .25) {
-          selected_->set_scale_y(scale_y - .05);
+        double scale_x = selected_->get_scale_x();
+        if(scale_x > .25) {
+          selected_->set_scale_x(scale_x - .05);
         }
       }
     }
@@ -290,7 +297,7 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_F == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
+      if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_scale_y(selected_->get_scale_y() + .05);
       } else {
         double scale_y = selected_->get_scale_y();
@@ -303,12 +310,12 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_V == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_scale_y(selected_->get_scale_y() + .05);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_scale_z(selected_->get_scale_z() + .05);
       } else {
-        double scale_y = selected_->get_scale_y();
-        if(scale_y > .25) {
-          selected_->set_scale_y(scale_y - .05);
+        double scale_z = selected_->get_scale_z();
+        if(scale_z > .25) {
+          selected_->set_scale_z(scale_z - .05);
         }
       }
     }
@@ -318,17 +325,17 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_T == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_rotation_y(selected_->get_rotation_y() + .5);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_rotation_x(selected_->get_rotation_x() + .5);
       } else {
-        selected_->set_rotation_y(selected_->get_rotation_y() - .5);
+        selected_->set_rotation_x(selected_->get_rotation_x() - .5);
       }
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_G == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
+      if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_rotation_y(selected_->get_rotation_y() + .5);
       } else {
         selected_->set_rotation_y(selected_->get_rotation_y() - .5);
@@ -338,10 +345,42 @@ void selected_callback() {
   key_callbacks_.push_front([&](int key, int action, int modifier) {
     if(selected_ != nullptr && (GLFW_KEY_B == key)
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
-      if(modifier == GLFW_MOD_SHIFT) {
-        selected_->set_rotation_y(selected_->get_rotation_y() + .5);
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_rotation_z(selected_->get_rotation_z() + .5);
       } else {
-        selected_->set_rotation_y(selected_->get_rotation_y() - .5);
+        selected_->set_rotation_z(selected_->get_rotation_z() - .5);
+      }
+    }
+  });
+
+  // Color
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_Y == key)  // US Keymap
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_color_red(selected_->get_color_red(0) + .01, 0);
+      } else {
+        selected_->set_color_red(selected_->get_color_red(0) - .01, 0);
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_H == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_color_green(selected_->get_color_green(0) + .01, 0);
+      } else {
+        selected_->set_color_green(selected_->get_color_green(0) - .01, 0);
+      }
+    }
+  });
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(selected_ != nullptr && (GLFW_KEY_N == key)
+       && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      if(modifier != GLFW_MOD_SHIFT) {
+        selected_->set_color_blue(selected_->get_color_blue(0) + .01, 0);
+      } else {
+        selected_->set_color_blue(selected_->get_color_blue(0) - .01, 0);
       }
     }
   });
@@ -631,7 +670,33 @@ void make_buttons(GLFWwindow*& window) {
   });
   buttons_.push_front(temp);
 
-  temp = new Button(0, 128, "./img/exit.bmp");
+  temp = new Button(0, 128, "./img/cube.bmp");
+  temp->set_color(0, 0, 1, 0);
+  temp->set_color(1, 0, 0, 1);
+  temp->set_scale(0.25);
+  temp->set_on_click([temp]() {
+    // TODO use modelview to get a better position
+    Cube* c = new Cube(0, 0, 7);
+    c->set_moveable(false);
+    objects_.push_front(c);
+    hitables_.push_front(c);
+    selected_ = c;
+
+    temp->set_color(0, 0, 1, 0);
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS || action == GLFW_REPEAT) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_click(x, y);
+      }
+    }
+  });
+  buttons_.push_front(temp);
+
+  temp = new Button(0, 192, "./img/exit.bmp");
   temp->set_color(0, 0, 1, 0);
   temp->set_color(1, 0, 0, 1);
   temp->set_scale(0.25);
@@ -788,6 +853,13 @@ Control newly created Objects via:\n\
     G y-axis -\n\
     b z-axis +\n\
     B z-axis -\n\
+  Color:\n\
+    z red +\n\
+    Z red -\n\
+    h green +\n\
+    H green -\n\
+    n blue +\n\
+    N blue -\n\
 \n\
   Stop Sphere from moving:\n\
     m\n");

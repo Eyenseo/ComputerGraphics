@@ -8,7 +8,7 @@ Pyramid::Pyramid()
 Pyramid::Pyramid(double origin_x, double origin_y, double origin_z)
     : Drawable(origin_x, origin_y, origin_z)
     , Hitable() {
-  sb_ = new SphereBB(this, &origin_, .5);
+  sb_ = new SphereBB(this, &origin_, .35);
   add_bounding_box(sb_);
 }
 
@@ -16,7 +16,7 @@ Pyramid::Pyramid(double origin_x, double origin_y, double origin_z,
                  unsigned char colors)
     : Drawable(origin_x, origin_y, origin_z, colors)
     , Hitable() {
-  sb_ = new SphereBB(this, &origin_, .5);
+  sb_ = new SphereBB(this, &origin_, .35);
   add_bounding_box(sb_);
 }
 
@@ -47,9 +47,9 @@ void Pyramid::draw() {
 
     normal.Normalize();
 
-    glNormal3dv(normal.get_vector());
-    glVertex3dv(v1.get_vector());
-    glVertex3dv(v2.get_vector());
+    glNormal3dv(normal);
+    glVertex3dv(v1);
+    glVertex3dv(v2);
   };
 
   set_material_color(1, 0);

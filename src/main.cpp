@@ -48,8 +48,10 @@ static bool game_started_ = false;
 static double mouse_divider_ = 0.35;
 static bool speed_key_pressed_ = false;
 
-static Sphere* interactive_;
-static Drawable* selected_;
+static Sphere* interactive_ = nullptr;
+static Drawable* selected_ = nullptr;
+static Button* banner_ = nullptr;
+static bool won_ = false;
 
 /**
  * Function taken from http://r3dux.org/2012/07/a-simple-glfw-fps-counter/
@@ -567,6 +569,7 @@ void make_objects(GLFWwindow* window) {
 
   Sphere* imp = new Sphere(-6, 0, 5.61);
   Drawable* temp;
+  bool* won = &won_;
 
   temp = imp;
   interactive_ = dynamic_cast<Sphere*>(temp);
@@ -643,13 +646,13 @@ void make_objects(GLFWwindow* window) {
   temp->set_color(1, 0, 0, 0);
   objects_.push_front(temp);
   hitables_.push_front(dynamic_cast<Pyramid*>(temp));
-  dynamic_cast<Hitable*>(temp)
-      ->set_on_collision([imp, window](const Hitable* h) {
-        const Sphere* s = dynamic_cast<const Sphere*>(h);
-        if(imp == s) {
-          glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-      });
+  dynamic_cast<Hitable*>(temp)->set_on_collision([imp, won](const Hitable* h) {
+    const Sphere* s = dynamic_cast<const Sphere*>(h);
+    if(!*won && imp == s) {
+      *won = true;
+      imp->set_moveable(false);
+    }
+  });
   (*hitables_.begin())->set_only_test(true);
 
   temp = new Table(0, 0, 0);
@@ -761,6 +764,7 @@ void make_buttons(GLFWwindow*& window) {
     temp->set_scale(0.25);
     temp->set_on_click([temp, imp]() {
       game_started_ = false;
+      won_ = false;
       (*imp)->set_moveable(false);
       (*imp)->set_origin(GLVector<XYZW>(-6, 0, 5.61, 1));
       (*imp)->set_speed(GLVector<XYZ>());
@@ -784,6 +788,8 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_color(0.4, 0.4, 0.4, 1);
   temp->set_scale(0.25);
   temp->set_on_click([temp, window]() {
+    game_started_ = false;
+    won_ = false;
     for(auto object : objects_) {
       delete object;
     }
@@ -823,6 +829,9 @@ void make_buttons(GLFWwindow*& window) {
     }
   });
   buttons_.push_front(temp);
+
+  banner_ = new Button(340, 300, "./img/banner.bmp");
+  banner_->set_color(180, 50, 95, 0);
 }
 
 /**
@@ -837,6 +846,9 @@ void draw() {
 void drawButtons() {
   for(auto button : buttons_) {
     button->draw();
+  }
+  if(won_) {
+    banner_->draw();
   }
 }
 

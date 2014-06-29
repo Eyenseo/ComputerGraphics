@@ -14,6 +14,7 @@
 #include "include/sphere.hpp"
 #include "include/table.hpp"
 #include "include/button.hpp"
+#include "include/cylinder.hpp"
 
 #include "include/physic.hpp"
 
@@ -600,6 +601,12 @@ void make_objects(GLFWwindow* window) {
   (*hitables_.begin())->set_moveable(false);
   dynamic_cast<Sphere*>(*hitables_.begin())->set_color(123, 12, 12, 0);
 
+  temp = new Cylinder(0, 2,5.32, 3);
+  temp->set_rotation_x(90);
+  objects_.push_front(temp);
+  hitables_.push_front((Cylinder*)temp);
+  (*hitables_.begin())->set_moveable(false);
+  
   temp = new Cube(2, -2, 5.9);
   temp->set_color(213, 123, 34, 0);
   temp->set_rotation_x(45);

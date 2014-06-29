@@ -42,7 +42,7 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-static bool game_mode_ = false;
+static bool game_mode_ = true;
 static bool game_started_ = false;
 
 static double mouse_divider_ = 0.35;
@@ -673,32 +673,39 @@ void make_buttons(GLFWwindow*& window) {
   Button* temp = nullptr;
   Sphere** imp = &interactive_;
 
-  temp = new Button(0, 0, "./img/start.bmp");
-  temp->set_color(0, 0, 1, 0);
-  temp->set_color(1, 0, 0, 1);
-  temp->set_scale(0.25);
-  temp->set_on_click([temp, imp]() {
-    if(game_mode_ && !game_started_) {
-      (*imp)->set_moveable(true);
-      (*imp)->set_speed(GLVector<XYZ>(10, 0, 0));
-      game_started_ = true;
-    }
-  });
-  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
-                                     unsigned int x, unsigned int y) {
-    if(button == 0) {
-      if(action == GLFW_PRESS) {
-        temp->on_press(x, y);
-      } else if(action == GLFW_RELEASE) {
-        temp->on_click(x, y);
-      }
-    }
-  });
-  buttons_.push_front(temp);
+  unsigned int pos_x = 0;
+  unsigned int pos_y = 0;
 
-  temp = new Button(0, 64, "./img/Kugel.bmp");
-  temp->set_color(0, 0, 1, 0);
-  temp->set_color(1, 0, 0, 1);
+  if(game_mode_) {
+    temp = new Button(pos_x, pos_y, "./img/start.bmp");
+    pos_y += 64;
+    temp->set_color(0.5, 0.5, 0.5, 0);
+    temp->set_color(0.4, 0.4, 0.4, 1);
+    temp->set_scale(0.25);
+    temp->set_on_click([temp, imp]() {
+      if(game_mode_ && !game_started_) {
+        (*imp)->set_moveable(true);
+        (*imp)->set_speed(GLVector<XYZ>(10, 0, 0));
+        game_started_ = true;
+      }
+    });
+    mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                       unsigned int x, unsigned int y) {
+      if(button == 0) {
+        if(action == GLFW_PRESS) {
+          temp->on_press(x, y);
+        } else if(action == GLFW_RELEASE) {
+          temp->on_click(x, y);
+        }
+      }
+    });
+    buttons_.push_front(temp);
+  }
+
+  temp = new Button(pos_x, pos_y, "./img/Kugel.bmp");
+  pos_y += 64;
+  temp->set_color(0.5, 0.5, 0.5, 0);
+  temp->set_color(0.4, 0.4, 0.4, 1);
   temp->set_scale(0.25);
   temp->set_on_click([temp]() {
     // TODO use modelview to get a better position
@@ -707,8 +714,6 @@ void make_buttons(GLFWwindow*& window) {
     selectable_.push_front(s);
     hitables_.push_front(s);
     selected_ = s;
-
-    temp->set_color(0, 0, 1, 0);
   });
   mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
                                      unsigned int x, unsigned int y) {
@@ -722,9 +727,10 @@ void make_buttons(GLFWwindow*& window) {
   });
   buttons_.push_front(temp);
 
-  temp = new Button(0, 128, "./img/cube.bmp");
-  temp->set_color(0, 0, 1, 0);
-  temp->set_color(1, 0, 0, 1);
+  temp = new Button(pos_x, pos_y, "./img/cube.bmp");
+  pos_y += 64;
+  temp->set_color(0.5, 0.5, 0.5, 0);
+  temp->set_color(0.4, 0.4, 0.4, 1);
   temp->set_scale(0.25);
   temp->set_on_click([temp]() {
     // TODO use modelview to get a better position
@@ -734,8 +740,6 @@ void make_buttons(GLFWwindow*& window) {
     selectable_.push_front(c);
     hitables_.push_front(c);
     selected_ = c;
-
-    temp->set_color(0, 0, 1, 0);
   });
   mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
                                      unsigned int x, unsigned int y) {
@@ -749,31 +753,35 @@ void make_buttons(GLFWwindow*& window) {
   });
   buttons_.push_front(temp);
 
-  temp = new Button(0, 192, "./img/reset.bmp");
-  temp->set_color(0, 0, 1, 0);
-  temp->set_color(1, 0, 0, 1);
-  temp->set_scale(0.25);
-  temp->set_on_click([temp, imp]() {
-    game_started_ = false;
-    (*imp)->set_moveable(false);
-    (*imp)->set_origin(GLVector<XYZW>(-6, 0, 5.61, 1));
-    (*imp)->set_speed(GLVector<XYZ>());
-  });
-  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
-                                     unsigned int x, unsigned int y) {
-    if(button == 0) {
-      if(action == GLFW_PRESS) {
-        temp->on_press(x, y);
-      } else if(action == GLFW_RELEASE) {
-        temp->on_click(x, y);
+  if(game_mode_) {
+    temp = new Button(pos_x, pos_y, "./img/reset.bmp");
+    pos_y += 64;
+    temp->set_color(0.5, 0.5, 0.5, 0);
+    temp->set_color(0.4, 0.4, 0.4, 1);
+    temp->set_scale(0.25);
+    temp->set_on_click([temp, imp]() {
+      game_started_ = false;
+      (*imp)->set_moveable(false);
+      (*imp)->set_origin(GLVector<XYZW>(-6, 0, 5.61, 1));
+      (*imp)->set_speed(GLVector<XYZ>());
+    });
+    mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                       unsigned int x, unsigned int y) {
+      if(button == 0) {
+        if(action == GLFW_PRESS) {
+          temp->on_press(x, y);
+        } else if(action == GLFW_RELEASE) {
+          temp->on_click(x, y);
+        }
       }
-    }
-  });
-  buttons_.push_front(temp);
+    });
+    buttons_.push_front(temp);
+  }
 
-  temp = new Button(0, 256, "./img/new.bmp");
-  temp->set_color(0, 0, 1, 0);
-  temp->set_color(1, 0, 0, 1);
+  temp = new Button(pos_x, pos_y, "./img/new.bmp");
+  pos_y += 64;
+  temp->set_color(0.5, 0.5, 0.5, 0);
+  temp->set_color(0.4, 0.4, 0.4, 1);
   temp->set_scale(0.25);
   temp->set_on_click([temp, window]() {
     for(auto object : objects_) {
@@ -796,9 +804,10 @@ void make_buttons(GLFWwindow*& window) {
   });
   buttons_.push_front(temp);
 
-  temp = new Button(0, 320, "./img/exit.bmp");
-  temp->set_color(0, 0, 1, 0);
-  temp->set_color(1, 0, 0, 1);
+  temp = new Button(pos_x, pos_y, "./img/exit.bmp");
+  pos_y += 64;
+  temp->set_color(0.5, 0.5, 0.5, 0);
+  temp->set_color(0.4, 0.4, 0.4, 1);
   temp->set_scale(0.25);
   temp->set_on_click([temp, window]() {
     glfwSetWindowShouldClose(window, GL_TRUE);

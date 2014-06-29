@@ -606,7 +606,7 @@ void make_objects(GLFWwindow* window) {
   objects_.push_front(temp);
   hitables_.push_front((Cylinder*)temp);
   (*hitables_.begin())->set_moveable(false);
-  
+
   temp = new Cube(2, -2, 5.9);
   temp->set_color(213, 123, 34, 0);
   temp->set_rotation_x(45);
@@ -736,6 +736,32 @@ void make_buttons(GLFWwindow*& window) {
     }
   });
   buttons_.push_front(temp);
+
+  temp = new Button(pos_x, pos_y, "./img/cylinder.bmp");
+    pos_y += 64;
+    temp->set_color(0.5, 0.5, 0.5, 0);
+    temp->set_color(0.4, 0.4, 0.4, 1);
+    temp->set_scale(0.25);
+    temp->set_on_click([temp]() {
+      // TODO use modelview to get a better position
+      Cylinder* cs = new Cylinder(0, 0, 7,3);
+      objects_.push_front(cs);
+      selectable_.push_front(cs);
+      hitables_.push_front(cs);
+      cs->set_rotation_x(90);
+      selected_ = cs;
+    });
+    mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                       unsigned int x, unsigned int y) {
+      if(button == 0) {
+        if(action == GLFW_PRESS) {
+          temp->on_press(x, y);
+        } else if(action == GLFW_RELEASE) {
+          temp->on_click(x, y);
+        }
+      }
+    });
+    buttons_.push_front(temp);
 
   temp = new Button(pos_x, pos_y, "./img/cube.bmp");
   pos_y += 64;

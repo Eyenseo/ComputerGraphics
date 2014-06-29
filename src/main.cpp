@@ -1,4 +1,5 @@
 #include <GLFW/glfw3.h>
+#include <list>
 #include <forward_list>
 #include <functional>
 #include <iostream>
@@ -20,6 +21,7 @@ static std::forward_list<std::function<void(int, int, int)>> key_callbacks_;
 static std::forward_list<std::function<void(
     unsigned int, unsigned int, unsigned int, unsigned int)>> mouse_callbacks_;
 static std::forward_list<Drawable*> objects_;
+static std::list<Drawable*> selectable_;
 static std::forward_list<Hitable*> hitables_;
 static std::forward_list<Button*> buttons_;
 
@@ -40,7 +42,7 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-static bool game_mode_ = true;
+static bool game_mode_ = false;
 static bool game_started_ = false;
 
 static double mouse_divider_ = 0.35;
@@ -195,7 +197,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
 }
 
 /**
- * Control newly created Objects via:
+ * Change selection via:
+ *   Tab and Shift Tab
+ *
+ * Control selected Object via:
  *   Movement:
  *     w x-axis +
  *     s x-axis -
@@ -229,9 +234,33 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
  *     m
  */
 void selected_callback() {
+  // Change Selection
+  key_callbacks_.push_front([&](int key, int action, int modifier) {
+    if(GLFW_KEY_TAB == key && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+      for(std::list<Drawable*>::iterator i = selectable_.begin(),
+                                         i_end = selectable_.end();
+          i != i_end; ++i) {
+        if(*i == selected_) {
+          if(modifier == GLFW_MOD_SHIFT) {
+            selected_ = *(--i);
+            if(selected_ == *i_end) {
+              selected_ = *(--i);
+            }
+          } else {
+            selected_ = *(++i);
+            if(selected_ == *i_end) {
+              selected_ = *(++i);
+            }
+          }
+          break;
+        }
+      }
+    }
+  });
+
   // Moveable
   key_callbacks_.push_front([&](int key, int action, int) {
-    if(selected_ != nullptr && (GLFW_KEY_M == key)
+    if(selected_ != nullptr && GLFW_KEY_M == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
 
       Hitable* hitable = dynamic_cast<Hitable*>(selected_);
@@ -244,37 +273,37 @@ void selected_callback() {
 
   // Movement
   key_callbacks_.push_front([&](int key, int action, int) {
-    if(selected_ != nullptr && (GLFW_KEY_W == key)
+    if(selected_ != nullptr && GLFW_KEY_W == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       selected_->set_origin_y(selected_->get_origin_y() + .05);
     }
   });
   key_callbacks_.push_front([&](int key, int action, int) {
-    if(selected_ != nullptr && (GLFW_KEY_A == key)
+    if(selected_ != nullptr && GLFW_KEY_A == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       selected_->set_origin_x(selected_->get_origin_x() - .05);
     }
   });
   key_callbacks_.push_front([&](int key, int action, int) {
-    if(selected_ != nullptr && (GLFW_KEY_S == key)
+    if(selected_ != nullptr && GLFW_KEY_S == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       selected_->set_origin_y(selected_->get_origin_y() - .05);
     }
   });
   key_callbacks_.push_front([&](int key, int action, int) {
-    if(selected_ != nullptr && (GLFW_KEY_D == key)
+    if(selected_ != nullptr && GLFW_KEY_D == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       selected_->set_origin_x(selected_->get_origin_x() + .05);
     }
   });
   key_callbacks_.push_front([&](int key, int action, int) {
-    if(selected_ != nullptr && (GLFW_KEY_E == key)
+    if(selected_ != nullptr && GLFW_KEY_E == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       selected_->set_origin_z(selected_->get_origin_z() + .05);
     }
   });
   key_callbacks_.push_front([&](int key, int action, int) {
-    if(selected_ != nullptr && (GLFW_KEY_Q == key)
+    if(selected_ != nullptr && GLFW_KEY_Q == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       selected_->set_origin_z(selected_->get_origin_z() - .05);
     }
@@ -282,7 +311,7 @@ void selected_callback() {
 
   // Scale
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_R == key)
+    if(selected_ != nullptr && GLFW_KEY_R == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_scale_x(selected_->get_scale_x() + .05);
@@ -295,7 +324,7 @@ void selected_callback() {
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_F == key)
+    if(selected_ != nullptr && GLFW_KEY_F == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_scale_y(selected_->get_scale_y() + .05);
@@ -308,7 +337,7 @@ void selected_callback() {
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_V == key)
+    if(selected_ != nullptr && GLFW_KEY_V == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_scale_z(selected_->get_scale_z() + .05);
@@ -323,7 +352,7 @@ void selected_callback() {
 
   // Rotate
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_T == key)
+    if(selected_ != nullptr && GLFW_KEY_T == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_rotation_x(selected_->get_rotation_x() + .5);
@@ -333,7 +362,7 @@ void selected_callback() {
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_G == key)
+    if(selected_ != nullptr && GLFW_KEY_G == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_rotation_y(selected_->get_rotation_y() + .5);
@@ -343,7 +372,7 @@ void selected_callback() {
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_B == key)
+    if(selected_ != nullptr && GLFW_KEY_B == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_rotation_z(selected_->get_rotation_z() + .5);
@@ -355,7 +384,7 @@ void selected_callback() {
 
   // Color
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_Y == key)  // US Keymap
+    if(selected_ != nullptr && GLFW_KEY_Y == key  // US Keymap
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_color_red(selected_->get_color_red(0) + .01, 0);
@@ -365,7 +394,7 @@ void selected_callback() {
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_H == key)
+    if(selected_ != nullptr && GLFW_KEY_H == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_color_green(selected_->get_color_green(0) + .01, 0);
@@ -375,7 +404,7 @@ void selected_callback() {
     }
   });
   key_callbacks_.push_front([&](int key, int action, int modifier) {
-    if(selected_ != nullptr && (GLFW_KEY_N == key)
+    if(selected_ != nullptr && GLFW_KEY_N == key
        && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
       if(modifier != GLFW_MOD_SHIFT) {
         selected_->set_color_blue(selected_->get_color_blue(0) + .01, 0);
@@ -405,7 +434,7 @@ void register_callbacks(GLFWwindow* window) {
     }
   });
   key_callbacks_.push_front([window](int key, int, int) {
-    if((GLFW_KEY_ESCAPE == key)) {
+    if(GLFW_KEY_ESCAPE == key) {
       glfwSetWindowShouldClose(window, GL_TRUE);
     }
   });
@@ -541,6 +570,9 @@ void make_objects(GLFWwindow* window) {
 
   temp = imp;
   interactive_ = dynamic_cast<Sphere*>(temp);
+  if(game_mode_) {
+    interactive_->set_moveable(false);
+  }
   temp->set_color(.7, .7, .7, 0);
   temp->set_scale_y(0.8);
   objects_.push_front(temp);
@@ -647,6 +679,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_scale(0.25);
   temp->set_on_click([temp, imp]() {
     if(game_mode_ && !game_started_) {
+      (*imp)->set_moveable(true);
       (*imp)->set_speed(GLVector<XYZ>(10, 0, 0));
       game_started_ = true;
     }
@@ -671,6 +704,7 @@ void make_buttons(GLFWwindow*& window) {
     // TODO use modelview to get a better position
     Sphere* s = new Sphere(0, 0, 7);
     objects_.push_front(s);
+    selectable_.push_front(s);
     hitables_.push_front(s);
     selected_ = s;
 
@@ -697,6 +731,7 @@ void make_buttons(GLFWwindow*& window) {
     Cube* c = new Cube(0, 0, 7);
     c->set_moveable(false);
     objects_.push_front(c);
+    selectable_.push_front(c);
     hitables_.push_front(c);
     selected_ = c;
 
@@ -720,6 +755,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_scale(0.25);
   temp->set_on_click([temp, imp]() {
     game_started_ = false;
+    (*imp)->set_moveable(false);
     (*imp)->set_origin(GLVector<XYZW>(-6, 0, 5.61, 1));
     (*imp)->set_speed(GLVector<XYZ>());
   });
@@ -744,6 +780,7 @@ void make_buttons(GLFWwindow*& window) {
       delete object;
     }
     objects_.clear();
+    selectable_.clear();
     hitables_.clear();
     make_objects(window);
   });
@@ -894,7 +931,10 @@ int main() {
   int error = 0;
 
   printf("Here we go!\n\n\
-Control newly created Objects via:\n\
+Change selection via:\n\
+  Tab and Shift Tab\n\
+\n\
+Control selected Object via:\n\
   Movement:\n\
     w x-axis +\n\
     s x-axis -\n\

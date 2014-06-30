@@ -143,7 +143,7 @@ void Button::draw() {
   GLMatrix mp = model.transpose() * projection.transpose();
 
   if(mp.inverse()) {
-    const GLVector<XYZW> clip = projection * GLVector<XYZW>::ZVec * 0.00001;
+    const GLVector<XYZW> clip = model * GLVector<XYZW>::ZVec * 0.00001;
 
     // Retrieve viewport matrix
     GLint viewport[4];
@@ -177,13 +177,13 @@ void Button::draw() {
     glBegin(GL_QUADS);
     glNormal3dv(normal);
     glTexCoord2f(0, 1);
-    glVertex3dv(left_top +clip);
+    glVertex3dv(left_top -clip);
     glTexCoord2f(0, 0);
-    glVertex3dv(left_bottom +clip);
+    glVertex3dv(left_bottom -clip);
     glTexCoord2f(1, 0);
-    glVertex3dv(right_bottom +clip);
+    glVertex3dv(right_bottom -clip);
     glTexCoord2f(1, 1);
-    glVertex3dv(right_top +clip);
+    glVertex3dv(right_top -clip);
     glEnd();
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_LIGHTING);

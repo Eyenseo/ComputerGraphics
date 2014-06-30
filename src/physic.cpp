@@ -208,106 +208,55 @@ void Physic::collision(CylinderBB& a, SphereBB& b) {
 
   const GLVector<XYZW> line_start = *a.origin_ - a.axis_ * a.half_height_;
   const GLVector<XYZW> line_end = *a.origin_ + a.axis_ * a.half_height_;
+  const GLVector<XYZW> closest
+      = closest_point_on_line(line_start, line_end, *b.origin_);
+  const GLVector<XYZW> distance = closest - *b.origin_;
 
-  GLVector<XYZW> distance = line_start - *b.origin_;
-  double distance_length_sq = distance.Length2();
-
-  if(distance_length_sq >= a.radius_ * a.radius_) {
-    distance = line_end - *b.origin_;
-    distance_length_sq = distance.Length2();
-  }
-
-  if(distance_length_sq < a.radius_ * a.radius_) {
+  if(distance.Length2() < pow(a.radius_ + b.radius_, 2)
+     /*&& (closest - line_start).Length2() * (closest - line_end).Length2()
+        < (2 * a.half_height_ - b.radius_) * (2 * a.half_height_ - b.radius_)*/) {
     Hitable& a_hit = *a.hitable_;
     Hitable& b_hit = *b.hitable_;
 
     if(!a_hit.is_only_test() && !b_hit.is_only_test()) {
-      GLVector<XYZW> n = -a.axis_;
+      GLVector<XYZW> n = distance;
       n.Normalize();
 
       if(a_hit.is_moveable() && b_hit.is_moveable()) {
         // Calculate new speed direction
         const GLVector<XYZW> a_speed = a_hit.speed_;
-        const GLVector<XYZW> a_sub_b = *a.origin_ - *b.origin_;
-        const GLVector<XYZW> b_sub_a = *b.origin_ - *a.origin_;
-
-        a_hit.speed_ -= ((a_speed - b_hit.speed_) * a_sub_b / a_sub_b.Length2())
-                        * a_sub_b;
-        b_hit.speed_ -= ((b_hit.speed_ - a_speed) * b_sub_a / b_sub_a.Length2())
-                        * b_sub_a;
+        {
+          const GLVector<XYZW> a_sub_b = *a.origin_ - *b.origin_;
+          a_hit.speed_ -= ((a_speed - b_hit.speed_) * a_sub_b
+                           / a_sub_b.Length2()) * a_sub_b;
+        }
+        {
+          const GLVector<XYZW> b_sub_a = *b.origin_ - *a.origin_;
+          b_hit.speed_ -= ((b_hit.speed_ - a_speed) * b_sub_a
+                           / b_sub_a.Length2()) * b_sub_a;
+        }
 
         // Move objects out of each other
-        const GLVector<XYZW> half_intersection = (distance - n * a.radius_) / 2;
-        *a.origin_ += half_intersection;
-        *b.origin_ -= half_intersection;
+        const GLVector<XYZW> half_intersection
+            = (distance - n * b.radius_ - n * a.radius_) / 2;
+        *a.origin_ -= half_intersection;
+        *b.origin_ += half_intersection;
       } else if(a_hit.is_moveable()) {
         // Mirror speed
         a_hit.speed_ -= 2 * (n * (n * a_hit.speed_));
 
         // Move object out of the unmoveable one
-        *a.origin_ += (distance - (n * a.radius_));
+        *a.origin_ -= (distance - (n * b.radius_) - (n * a.radius_));
       } else if(b_hit.is_moveable()) {
         // Mirror speed
         b_hit.speed_ -= 2 * (n * (n * b_hit.speed_));
 
         // Move object out of the unmoveable one
-        *b.origin_ += (distance - (n * a.radius_));
+        *b.origin_ += (distance - (n * b.radius_) - (n * a.radius_));
       }
     }
     a_hit.on_collision(&b_hit);
     b_hit.on_collision(&a_hit);
-  } else {
-    const GLVector<XYZW> closest
-        = closest_point_on_line(line_start, line_end, *b.origin_);
-    distance = closest - *b.origin_;
-
-    if(distance.Length2() < pow(a.radius_ + b.radius_, 2)
-       && (closest - line_start).Length2() * (closest - line_end).Length2()
-          < (2 * a.half_height_ - b.radius_)
-            * (2 * a.half_height_ - b.radius_)) {
-      Hitable& a_hit = *a.hitable_;
-      Hitable& b_hit = *b.hitable_;
-
-      if(!a_hit.is_only_test() && !b_hit.is_only_test()) {
-        GLVector<XYZW> n = distance;
-        n.Normalize();
-
-        if(a_hit.is_moveable() && b_hit.is_moveable()) {
-          // Calculate new speed direction
-          const GLVector<XYZW> a_speed = a_hit.speed_;
-          {
-            const GLVector<XYZW> a_sub_b = *a.origin_ - *b.origin_;
-            a_hit.speed_ -= ((a_speed - b_hit.speed_) * a_sub_b
-                             / a_sub_b.Length2()) * a_sub_b;
-          }
-          {
-            const GLVector<XYZW> b_sub_a = *b.origin_ - *a.origin_;
-            b_hit.speed_ -= ((b_hit.speed_ - a_speed) * b_sub_a
-                             / b_sub_a.Length2()) * b_sub_a;
-          }
-
-          // Move objects out of each other
-          const GLVector<XYZW> half_intersection
-              = (distance - n * b.radius_ - n * a.radius_) / 2;
-          *a.origin_ -= half_intersection;
-          *b.origin_ += half_intersection;
-        } else if(a_hit.is_moveable()) {
-          // Mirror speed
-          a_hit.speed_ -= 2 * (n * (n * a_hit.speed_));
-
-          // Move object out of the unmoveable one
-          *a.origin_ -= (distance - (n * b.radius_) - (n * a.radius_));
-        } else if(b_hit.is_moveable()) {
-          // Mirror speed
-          b_hit.speed_ -= 2 * (n * (n * b_hit.speed_));
-
-          // Move object out of the unmoveable one
-          *b.origin_ += (distance - (n * b.radius_) - (n * a.radius_));
-        }
-      }
-      a_hit.on_collision(&b_hit);
-      b_hit.on_collision(&a_hit);
-    }
   }
 }
 

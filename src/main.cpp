@@ -44,7 +44,7 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-static bool game_mode_ = false;
+static bool game_mode_ = true;
 static bool game_started_ = false;
 
 static double mouse_divider_ = 0.35;
@@ -599,35 +599,35 @@ void make_objects(GLFWwindow* window) {
   objects_.push_front(temp);
   hitables_.push_front(dynamic_cast<Sphere*>(temp));
 
-  for(unsigned int i = 0; i < 6; ++i) {
-    switch(i % 3) {
-    case 0:
-      dif_x += 1.1;
-      break;
-    case 1:
-      dif_x += 1.1;
-      break;
-    case 2:
-      dif_x -= 1.1;
-      dif_y += 1.1;
-    }
-    temp = new Sphere(dif_x, dif_y, 5.61);
-    objects_.push_front(temp);
-    hitables_.push_front(dynamic_cast<Sphere*>(temp));
-  }
-  (*hitables_.begin())->set_moveable(false);
-  dynamic_cast<Sphere*>(*hitables_.begin())->set_color(123, 12, 12, 0);
+  // for(unsigned int i = 0; i < 6; ++i) {
+  //   switch(i % 3) {
+  //   case 0:
+  //     dif_x += 1.1;
+  //     break;
+  //   case 1:
+  //     dif_x += 1.1;
+  //     break;
+  //   case 2:
+  //     dif_x -= 1.1;
+  //     dif_y += 1.1;
+  //   }
+  //   temp = new Sphere(dif_x, dif_y, 5.61);
+  //   objects_.push_front(temp);
+  //   hitables_.push_front(dynamic_cast<Sphere*>(temp));
+  // }
+  // (*hitables_.begin())->set_moveable(false);
+  // dynamic_cast<Sphere*>(*hitables_.begin())->set_color(123, 12, 12, 0);
 
-  temp = new Cylinder(0, 0, 5.32, 8);
+  temp = new Cylinder(0, 0, 5.51, 1);
+  temp->set_color(255, 55, 203, 0);
   temp->set_rotation_x(90);
-  // temp->set_scale_z(8);
-  // temp->set_scale_y(8);
+  temp->set_scale_z(10);
   objects_.push_front(temp);
   hitables_.push_front((Cylinder*)temp);
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(2, -2, 5.9);
-  temp->set_color(213, 123, 34, 0);
+  temp->set_color(102, 255, 102, 0);
   temp->set_rotation_x(45);
   temp->set_rotation_z(45);
   objects_.push_front(temp);
@@ -635,7 +635,7 @@ void make_objects(GLFWwindow* window) {
   (*hitables_.begin())->set_moveable(false);
 
   temp = new Cube(-2, 2, 5.61);
-  temp->set_color(213, 123, 34, 0);
+  temp->set_color(0, 204, 204, 0);
   temp->set_scale_y(0.25);
   objects_.push_front(temp);
   hitables_.push_front(dynamic_cast<Cube*>(temp));
@@ -650,17 +650,17 @@ void make_objects(GLFWwindow* window) {
   hitables_.push_front(dynamic_cast<Cube*>(temp));
   (*hitables_.begin())->set_moveable(false);
 
-  temp = new Cube(-1.25, -2, 5.32);
-  temp->set_color(36, 156, 49, 0);
-  temp->set_rotation_x(8);
-  temp->set_rotation_y(-8);
-  temp->set_rotation_z(45);
-  temp->set_scale_x(2);
-  temp->set_scale_y(2);
-  temp->set_scale_z(0.01);
-  objects_.push_front(temp);
-  hitables_.push_front(dynamic_cast<Cube*>(temp));
-  (*hitables_.begin())->set_moveable(false);
+  // temp = new Cube(-1.25, -2, 5.32);
+  // temp->set_color(36, 156, 49, 0);
+  // temp->set_rotation_x(8);
+  // temp->set_rotation_y(-8);
+  // temp->set_rotation_z(45);
+  // temp->set_scale_x(2);
+  // temp->set_scale_y(2);
+  // temp->set_scale_z(0.01);
+  // objects_.push_front(temp);
+  // hitables_.push_front(dynamic_cast<Cube*>(temp));
+  // (*hitables_.begin())->set_moveable(false);
 
   temp = new Pyramid(-6, 0, 5.15);  // Start
   temp->set_color(0, 1, 0, 0);
@@ -737,7 +737,7 @@ void make_buttons(GLFWwindow*& window) {
   temp->set_color(0.4, 0.4, 0.4, 1);
   temp->set_scale(0.25);
   temp->set_on_click([temp, imp]() {
-    Sphere* c = new Sphere(0, 0, 5.31);
+    Sphere* c = new Sphere(0, 0, 6);
     objects_.push_front(c);
     selectable_.push_front(c);
     hitables_.push_front(c);

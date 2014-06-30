@@ -28,6 +28,7 @@ public:
   virtual void draw();
 
   virtual void set_image(GLuint image);
+  virtual void set_material_color(int side, unsigned char color = 0) const;
 
   virtual void on_press(unsigned int x, unsigned int y);
   virtual void on_release(unsigned int x, unsigned int y);
@@ -38,6 +39,5 @@ public:
   virtual void set_on_click(const std::function<void()>& f);
 
   virtual void set_pressed(bool pressed);
-
 };
 #endif

@@ -69,6 +69,15 @@ public:
   virtual double get_color_blue(unsigned char color) const;
   virtual void set_color_blue(double b, unsigned char color);
 
+  virtual double get_ambient(unsigned char color) const;
+  virtual void set_ambient(double a, unsigned char color);
+
+  virtual double get_spectacular(unsigned char color) const;
+  virtual void set_spectacular(double s, unsigned char color);
+
+  virtual double get_shininess(unsigned char color) const;
+  virtual void set_shininess(double s, unsigned char color);
+
   virtual const GLVector<XYZ> get_scale() const;
   virtual void set_scale(const GLVector<XYZ>& scale);
   virtual void set_scale(double scale);

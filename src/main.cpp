@@ -43,7 +43,7 @@ static double global_z_rotation_ = 0;
 static int mouse_down_x_ = 0;
 static int mouse_down_y_ = 0;
 
-static bool game_mode_ = true;
+static bool game_mode_ = false;
 static bool game_started_ = false;
 
 static double mouse_divider_ = 0.35;
@@ -578,6 +578,7 @@ void make_objects(GLFWwindow* window) {
     interactive_->set_moveable(false);
   }
   temp->set_color(.7, .7, .7, 0);
+  temp->set_color(.7, 0, 0, 0);
   temp->set_scale_y(0.8);
   objects_.push_front(temp);
   hitables_.push_front(dynamic_cast<Sphere*>(temp));
@@ -601,8 +602,10 @@ void make_objects(GLFWwindow* window) {
   (*hitables_.begin())->set_moveable(false);
   dynamic_cast<Sphere*>(*hitables_.begin())->set_color(123, 12, 12, 0);
 
-  temp = new Cylinder(0, 2,5.32, 3);
+  temp = new Cylinder(0, 0,5.32, 8);
   temp->set_rotation_x(90);
+  // temp->set_scale_z(8);
+  // temp->set_scale_y(8);
   objects_.push_front(temp);
   hitables_.push_front((Cylinder*)temp);
   (*hitables_.begin())->set_moveable(false);
@@ -653,9 +656,10 @@ void make_objects(GLFWwindow* window) {
   temp->set_color(1, 0, 0, 0);
   objects_.push_front(temp);
   hitables_.push_front(dynamic_cast<Pyramid*>(temp));
-  dynamic_cast<Hitable*>(temp)->set_on_collision([imp, won](const Hitable* h) {
+  dynamic_cast<Hitable*>(temp)->set_on_collision([imp, won](const Hitable* h)
+  {
     const Sphere* s = dynamic_cast<const Sphere*>(h);
-    if(!*won && imp == s) {
+    if(!*won && imp == s && game_mode_) {
       *won = true;
       imp->set_moveable(false);
     }
@@ -738,30 +742,30 @@ void make_buttons(GLFWwindow*& window) {
   buttons_.push_front(temp);
 
   temp = new Button(pos_x, pos_y, "./img/cylinder.bmp");
-    pos_y += 64;
-    temp->set_color(0.5, 0.5, 0.5, 0);
-    temp->set_color(0.4, 0.4, 0.4, 1);
-    temp->set_scale(0.25);
-    temp->set_on_click([temp]() {
-      // TODO use modelview to get a better position
-      Cylinder* cs = new Cylinder(0, 0, 7,3);
-      objects_.push_front(cs);
-      selectable_.push_front(cs);
-      hitables_.push_front(cs);
-      cs->set_rotation_x(90);
-      selected_ = cs;
-    });
-    mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
-                                       unsigned int x, unsigned int y) {
-      if(button == 0) {
-        if(action == GLFW_PRESS) {
-          temp->on_press(x, y);
-        } else if(action == GLFW_RELEASE) {
-          temp->on_click(x, y);
-        }
+  pos_y += 64;
+  temp->set_color(0.5, 0.5, 0.5, 0);
+  temp->set_color(0.4, 0.4, 0.4, 1);
+  temp->set_scale(0.25);
+  temp->set_on_click([temp]() {
+    // TODO use modelview to get a better position
+    Cylinder* cs = new Cylinder(0, 0, 7, 3);
+    cs->set_moveable(false);
+    objects_.push_front(cs);
+    selectable_.push_front(cs);
+    hitables_.push_front(cs);
+    selected_ = cs;
+  });
+  mouse_callbacks_.push_front([temp](unsigned int button, unsigned int action,
+                                     unsigned int x, unsigned int y) {
+    if(button == 0) {
+      if(action == GLFW_PRESS) {
+        temp->on_press(x, y);
+      } else if(action == GLFW_RELEASE) {
+        temp->on_click(x, y);
       }
-    });
-    buttons_.push_front(temp);
+    }
+  });
+  buttons_.push_front(temp);
 
   temp = new Button(pos_x, pos_y, "./img/cube.bmp");
   pos_y += 64;

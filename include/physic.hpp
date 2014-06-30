@@ -10,6 +10,7 @@
 #include "gl_matrix.hpp"
 #include "obb.hpp"
 #include "sphere_bb.hpp"
+#include "cylinderBB.hpp"
 #include "timer.hpp"
 
 class Physic {
@@ -19,11 +20,13 @@ class Physic {
 
   GLVector<XYZW> closest_point_on_OBB(const GLVector<XYZW>& a, const OBB& b);
 
- void collision();
+  void collision();
+  void collision(CylinderBB& a, CylinderBB& b);
   void collision(SphereBB& a, SphereBB& b);
-  void collision(SphereBB& a, OBB& b);
-  void collision(OBB& a, SphereBB& b);
   void collision(OBB& a, OBB& b);
+  void collision(SphereBB& a, OBB& b);
+  void collision(CylinderBB& a, OBB& b);
+  void collision(CylinderBB& a, SphereBB& b);
 
 public:
   Physic();

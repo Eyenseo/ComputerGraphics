@@ -100,6 +100,18 @@ void Button::load_bmp(const char* imagepath) {
   delete[] data;
 }
 
+/**
+ * The function will set the material color for OpenGL
+ *
+ * @param side    1 = front color, 2 = back color, else both
+ * @param outside which color to be used for the chosen side
+ */
+void Button::set_material_color(int, unsigned char color) const {
+  assert(color < colors_);
+
+  glColor3f(color_[color * 6], color_[color * 6 + 1], color_[color * 6 + 2]);
+}
+
 GLVector<XYZW> Button::mouse_pos_to_world(const GLMatrix& modelXprojectionINV,
                                           GLint* viewport, GLVector<XYZW> pos) {
   pos[1] = viewport[3] - pos[1];
@@ -154,9 +166,9 @@ void Button::draw() {
     normal.Normalize();
 
     if(!pressed_) {
-      glColor3f(color_[0], color_[1], color_[2]);
+      set_material_color(0,0);
     } else {
-      glColor3f(color_[3], color_[4], color_[5]);
+      set_material_color(0,1);
     }
 
     glDisable(GL_LIGHTING);
@@ -200,8 +212,7 @@ void Button::on_click(unsigned int x, unsigned int y) {
 }
 
 void Button::on_release(unsigned int x, unsigned int y) {
-  if(x > origin_[0] && y > origin_[1]
-     && x < origin_[0] + width_ * scale_[0]
+  if(x > origin_[0] && y > origin_[1] && x < origin_[0] + width_ * scale_[0]
      && y < origin_[1] + height_ * scale_[1]) {
     on_release_();
   }

@@ -5,26 +5,44 @@
 #include <sstream>
 
 Drawable::Drawable()
-  : origin_(0, 0, 0, 1),
-  scale_(1, 1, 1),
-  color_(new double[1 * 3]()),
-  colors_(1) {}
+    : origin_(0, 0, 0, 1)
+    , scale_(1, 1, 1)
+    , color_(new double[6]())
+    , colors_(1) {
+  for(unsigned int i = 0; i < colors_; ++i) {
+    color_[i * 6 + 3] = .1;
+    color_[i * 6 + 4] = .5;
+    color_[i * 6 + 5] = 20;
+  }
+}
 
 Drawable::Drawable(double origin_x, double origin_y, double origin_z)
-  : origin_(origin_x, origin_y, origin_z, 1),
-  scale_(1, 1, 1),
-  color_(new double[1 * 3]()),
-  colors_(1)  {}
+    : origin_(origin_x, origin_y, origin_z, 1)
+    , scale_(1, 1, 1)
+    , color_(new double[6]())
+    , colors_(1) {
+  for(unsigned int i = 0; i < colors_; ++i) {
+    color_[i * 6 + 3] = .1;
+    color_[i * 6 + 4] = .5;
+    color_[i * 6 + 5] = 20;
+  }
+}
 
 Drawable::Drawable(double origin_x, double origin_y, double origin_z,
                    unsigned char colors)
-  : origin_(origin_x, origin_y, origin_z, 1),
-  scale_(1, 1, 1),
-  color_(new double[colors * 3]()),
-  colors_(colors)  {}
+    : origin_(origin_x, origin_y, origin_z, 1)
+    , scale_(1, 1, 1)
+    , color_(new double[colors * 6]())
+    , colors_(colors) {
+  for(unsigned int i = 0; i < colors_; ++i) {
+    color_[i * 6 + 3] = .1;
+    color_[i * 6 + 4] = .5;
+    color_[i * 6 + 5] = 20;
+  }
+}
 
 Drawable::~Drawable() {
-  delete[]color_;
+  delete[] color_;
 }
 
 /**
@@ -36,30 +54,33 @@ Drawable::~Drawable() {
 void Drawable::set_material_color(int side, unsigned char color = 0) const {
   assert(color < colors_);
   float amb[4], dif[4], spe[4];
-  int   mat, c = color * 3;
+  int mat, c = color * 6;
 
   dif[0] = color_[c];
   dif[1] = color_[c + 1];
   dif[2] = color_[c + 2];
 
   for(int i = 0; i < 3; i++) {
-    amb[i] = .1 * dif[i];
-    spe[i] = .5;
+    amb[i] = color_[c + 3] * dif[i];
+    spe[i] = color_[c + 4];
   }
   amb[3] = dif[3] = spe[3] = 1.0;
 
   switch(side) {
-    case 1: mat = GL_FRONT;
-      break;
-    case 2: mat = GL_BACK;
-      break;
-    default: mat = GL_FRONT_AND_BACK;
+  case 1:
+    mat = GL_FRONT;
+    break;
+  case 2:
+    mat = GL_BACK;
+    break;
+  default:
+    mat = GL_FRONT_AND_BACK;
   }
 
-  glMaterialfv(mat, GL_AMBIENT,  amb);
-  glMaterialfv(mat, GL_DIFFUSE,  dif);
+  glMaterialfv(mat, GL_AMBIENT, amb);
+  glMaterialfv(mat, GL_DIFFUSE, dif);
   glMaterialfv(mat, GL_SPECULAR, spe);
-  glMaterialf(mat, GL_SHININESS, 20);
+  glMaterialf(mat, GL_SHININESS, color_[c + 5]);
 }
 
 /**
@@ -81,12 +102,12 @@ void Drawable::rotate_from(double x_angle, double y_angle, double z_angle,
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glTranslatef(x_distance, y_distance, z_distance);
-  glRotatef(x_angle, 1,    0.0f, 0.0f);
-  glRotatef(y_angle, 0.0f, 1,    0.0f);
-  glRotatef(z_angle, 0.0f, 0.0f,    1);
+  glRotatef(x_angle, 1, 0.0f, 0.0f);
+  glRotatef(y_angle, 0.0f, 1, 0.0f);
+  glRotatef(z_angle, 0.0f, 0.0f, 1);
 }
 
-const GLVector<XYZW>Drawable::get_origin() const {
+const GLVector<XYZW> Drawable::get_origin() const {
   return origin_;
 }
 
@@ -165,11 +186,11 @@ const double* Drawable::get_color() const {
   return color_;
 }
 
-void Drawable::set_color(double r, double g, double b, unsigned char color
-                           = 0) {
+void Drawable::set_color(double r, double g, double b,
+                         unsigned char color = 0) {
   assert(color < colors_);
 
-  int i = color * 3;
+  int i = color * 6;
 
   if(r > 1) {
     color_[i] = r / 255;
@@ -189,48 +210,72 @@ void Drawable::set_color(double r, double g, double b, unsigned char color
 }
 
 double Drawable::get_color_red(unsigned char color = 0) const {
-  return color_[color * 3];
+  return color_[color * 6];
 }
 
 void Drawable::set_color_red(double r, unsigned char color = 0) {
   assert(color < colors_);
 
   if(r > 1) {
-    color_[color * 3] = r / 255;
+    color_[color * 6] = r / 255;
   } else {
-    color_[color * 3] = r;
+    color_[color * 6] = r;
   }
 }
 
 double Drawable::get_color_green(unsigned char color = 0) const {
-  return color_[color * 3 + 1];
+  return color_[color * 6 + 1];
 }
 
 void Drawable::set_color_green(double g, unsigned char color = 0) {
   assert(color < colors_);
 
   if(g > 1) {
-    color_[color * 3 + 1] = g / 255;
+    color_[color * 6 + 1] = g / 255;
   } else {
-    color_[color * 3 + 1] = g;
+    color_[color * 6 + 1] = g;
   }
 }
 
 double Drawable::get_color_blue(unsigned char color = 0) const {
-  return color_[color * 3 + 2];
+  return color_[color * 6 + 2];
 }
 
 void Drawable::set_color_blue(double b, unsigned char color = 0) {
   assert(color < colors_);
 
   if(b > 1) {
-    color_[color * 3 + 2] = b / 255;
+    color_[color * 6 + 2] = b / 255;
   } else {
-    color_[color * 3 + 2] = b;
+    color_[color * 6 + 2] = b;
   }
 }
 
-const GLVector<XYZ>Drawable::get_scale() const {
+double Drawable::get_ambient(unsigned char color) const {
+  return color_[color * 6 + 3];
+}
+
+void Drawable::set_ambient(double a, unsigned char color) {
+  color_[color * 6 + 3] = a;
+}
+
+double Drawable::get_spectacular(unsigned char color) const {
+  return color_[color * 6 + 4];
+}
+
+void Drawable::set_spectacular(double s, unsigned char color) {
+  color_[color * 6 + 4] = s;
+}
+
+double Drawable::get_shininess(unsigned char color) const {
+  return color_[color * 6 + 5];
+}
+
+void Drawable::set_shininess(double s, unsigned char color) {
+  color_[color * 6 + 5] = s;
+}
+
+const GLVector<XYZ> Drawable::get_scale() const {
   return scale_;
 }
 
@@ -275,4 +320,3 @@ double Drawable::get_scale_z() const {
 void Drawable::set_scale_z(double scale_z) {
   scale_[2] = scale_z;
 }
-
